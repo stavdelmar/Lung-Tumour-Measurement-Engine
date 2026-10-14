@@ -218,3 +218,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Project data (public RIDER scans are downloaded locally, never committed)
+data/
+data.nosync/
+cache/
+*.npz
+*.dcm

@@ -1,0 +1,9 @@
+numpy
+scipy
+pydicom
+SimpleITK
+scikit-image
+matplotlib
+torch          # CPU build is enough for the engine
+lungmask       # AI lung mask (R231 weights download from GitHub on first run)
+fill_voids
