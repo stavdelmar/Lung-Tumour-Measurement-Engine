@@ -43,6 +43,14 @@ def _predictor(model_dir, patch=None, step=0.5):
         p.initialize_from_trained_model_folder(model_dir, use_folds=folds)
         if patch:
             p.configuration_manager.configuration["patch_size"] = list(patch)
+        if dev.type == "cpu" and os.environ.get("ENGINE_CPU_BF16", "1") == "1":
+            # bfloat16 on CPU halves the memory of the network's activations (fits free 6-16 GB boxes)
+            net = p.network
+            fwd = net.forward
+            def forward_bf16(x, _fwd=fwd):
+                with torch.autocast("cpu", dtype=torch.bfloat16):
+                    return _fwd(x).float()
+            net.forward = forward_bf16
         _predictors[key] = p
     return _predictors[key]
 
