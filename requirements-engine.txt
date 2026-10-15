@@ -1,0 +1,10 @@
+numpy
+scipy
+pydicom
+SimpleITK
+scikit-image
+pillow
+totalsegmentator==2.18.0
+fastapi
+uvicorn
+huggingface_hub
