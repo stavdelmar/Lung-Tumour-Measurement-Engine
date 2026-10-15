@@ -106,6 +106,12 @@ print(f"Dice median {f.dice.median():.3f}")
 for v in ["halo", "medsam2"]:
     if f"{v}_dice" in f:
         print(f"  {v}: Dice {f[v+'_dice'].median():.3f} | long err {(f[v+'_long']-f.expert_long).abs().median():.1f} mm | short err {(f[v+'_short']-f.expert_short).abs().median():.1f} mm | vol err {((f[v+'_vol']-f.expert_vol).abs()/f.expert_vol*100).median():.0f} %")
+print("Long axis too long because of a vessel tail (> expert + 2.3 mm AND tail adds > 2 mm):")
+for v, col_l, col_s in [("model", "tool_long", "tool_spur_mm"), ("halo", "halo_long", "halo_spur_mm"), ("medsam2", "medsam2_long", "medsam2_spur_mm")]:
+    if col_s in f:
+        over = (f[col_l] - f.expert_long) > 2.3
+        tail = over & (f[col_s] > 2.0)
+        print(f"  {v}: too long {over.sum()}/{len(f)}, of which because of a tail {tail.sum()}")
 print("By expert type:"); print(r.groupby("expert_type").agg(scans=("found", "size"), found=("found", "sum")))
 print(f"Lobe agrees with lobe of expert outline: {(f.tool_lobe == f.expert_lobe).mean()*100:.0f} %")
 print(f"Candidates per scan (>=4 mm): median {r.n_candidates.median():.0f}, max {r.n_candidates.max()}")
