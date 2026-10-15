@@ -19,6 +19,9 @@ from . import measure, match, outline
 from .pipeline import run_scan
 
 
+# "Too long because of a vessel tail" = long axis > expert + 2.3 mm (expert repeat noise) AND spur_mm > 2.
+TAIL_RULE = dict(over_mm=2.3, spur_mm=2.0)
+
 # Outline refiners compared on the found tumour: name -> fn(component_mask, hu, spacing, lobes) -> mask
 REFINERS = {"halo": lambda c, hu, sp, lobes: outline.halo(c, hu, sp, 4.0, -750, lobes)}
 
@@ -51,11 +54,15 @@ def eval_scan(nii_dir, cache_dir, pid, scan):
                    dice=round(2 * (pm & m).sum() / (pm.sum() + m.sum()), 3))
         hu = sitk.GetArrayFromImage(ct)
         sp = tuple(np.array(ct.GetSpacing())[::-1])
+        sl = tuple(slice(max(a.min() - 5, 0), a.max() + 6) for a in np.nonzero(pm | m))
+        row.update(tool_spur_mm=measure.spur_mm(pm[sl], sp), expert_spur_mm=measure.spur_mm(m[sl], sp))
         for name, fn in REFINERS.items():
             try:
                 t = time.time()
                 rm = fn(pm, hu, sp, lobes)
                 r = measure.measure_nodule(rm, hu, sp)
+                slr = tuple(slice(max(a.min() - 5, 0), a.max() + 6) for a in np.nonzero(rm | m))
+                row[f"{name}_spur_mm"] = measure.spur_mm(rm[slr], sp)
                 row.update({f"{name}_dice": round(2 * (rm & m).sum() / (rm.sum() + m.sum()), 3),
                             f"{name}_long": r["long_axis_mm"], f"{name}_short": r["short_axis_mm"],
                             f"{name}_vol": r["volume_mm3"], f"{name}_s": round(time.time() - t, 1)})

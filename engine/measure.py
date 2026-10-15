@@ -144,3 +144,17 @@ def components(nod_mask, prob=None, spacing_zyx=(1, 1, 1), min_long_mm=4.0, ct_h
         remap[old + 1] = new
         out[new - 1]["nodule_id"] = f"N{new}"
     return out, remap[keep]
+
+
+def spur_mm(mask, spacing_zyx, open_mm=1.5):
+    """How much of the long axis comes from a thin protrusion (e.g. a vessel tail stuck to the outline).
+    = long axis of the outline minus long axis after an in-plane opening that removes parts thinner
+    than ~2 x open_mm. Same slice-search as Daniel's measurement. 0 = no tail."""
+    sz, sy, sx = spacing_zyx
+    r = max(1, int(round(open_mm / sy)))
+    yy, xx = np.ogrid[-r:r + 1, -r:r + 1]
+    opened = ndi.binary_opening(mask, (yy ** 2 + xx ** 2 <= r * r)[None])
+    if not opened.any():
+        return 0.0
+    L = lambda m: max(axes_2d(m[z], sy, sx)[0] for z in np.nonzero(m.any(axis=(1, 2)))[0])
+    return round(max(0.0, L(mask) - L(opened)), 1)
