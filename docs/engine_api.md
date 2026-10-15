@@ -59,8 +59,9 @@ optional `box_px` `[x0,y0,x1,y1]`, optional `polygon_px` (Daniel's outline on sl
 
 ## 7. **[v1] Process (admin, live only)** — `POST /api/v1/scans/{scan_id}/process`
 Body `{"force": false}` → `{"status": "queued"|"processing"|"processed"}`. Runs the prior first if needed.
-Finding nodules takes ~15 min per scan on a free 2-CPU machine, ~20–40 s on a Colab T4 GPU,
-so the demo scans are processed ahead of time on Colab and loaded into the engine.
+Finding nodules needs the model at full settings (full patch, 32-bit): ~30 s per scan on a Colab T4 GPU;
+on CPU it needs ~8+ GB RAM (fits the free 16 GB HF Space, not a 6 GB box) and ~10–15 min per scan.
+So the demo scans are processed ahead of time on Colab and loaded into the engine.
 
 ## 8. Not in the engine (app does it)
 Axes from a dragged outline (or call `refine` with `polygon_px` to get them from the engine), mean diameter after

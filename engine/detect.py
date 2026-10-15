@@ -43,8 +43,9 @@ def _predictor(model_dir, patch=None, step=0.5):
         p.initialize_from_trained_model_folder(model_dir, use_folds=folds)
         if patch:
             p.configuration_manager.configuration["patch_size"] = list(patch)
-        if dev.type == "cpu" and os.environ.get("ENGINE_CPU_BF16", "1") == "1":
-            # bfloat16 on CPU halves the memory of the network's activations (fits free 6-16 GB boxes)
+        if dev.type == "cpu" and os.environ.get("ENGINE_CPU_BF16", "0") == "1":
+            # bfloat16 on CPU halves activation memory BUT degrades this model badly (tested 15 Oct:
+            # mean tumour probability 0.80 -> 0.37). Off by default; kept only for experiments.
             net = p.network
             fwd = net.forward
             def forward_bf16(x, _fwd=fwd):
@@ -82,11 +83,24 @@ def lobes(ct):
     small = sitk.Resample(ref, size3, sitk.Transform(), sitk.sitkLinear, ref.GetOrigin(), sp3,
                           ref.GetDirection(), -1024, sitk.sitkInt16)
     seg, _ = _run(LOBE_MODEL, small)
+    release(LOBE_MODEL)
     lab3 = np.zeros(seg.shape, np.uint8)
     for k, v in LOBE_LABELS.items():
         lab3[seg == k] = v
     li = sitk.GetImageFromArray(lab3); li.CopyInformation(small)
     return sitk.GetArrayFromImage(sitk.Resample(li, ref, sitk.Transform(), sitk.sitkNearestNeighbor, 0, sitk.sitkUInt8))
+
+
+def release(model_dir):
+    """Drop a cached model to free memory (the lobe model is not needed once lobes exist)."""
+    import gc, ctypes
+    for k in [k for k in _predictors if k[0] == model_dir]:
+        del _predictors[k]
+    gc.collect()
+    try:
+        ctypes.CDLL("libc.so.6").malloc_trim(0)
+    except Exception:
+        pass
 
 
 def lung_crop(lobe_map, spacing_zyx, margin_mm=10):
@@ -103,9 +117,10 @@ def nodules(ct, lobe_map, patch=None, step=0.5):
     sp = np.array(ref.GetSpacing())[::-1]
     m = np.zeros(lobe_map.shape, bool)
     p = np.zeros(lobe_map.shape, np.float16)
-    # One lung at a time keeps peak memory under ~5 GB on CPU (both at once needs more).
+    # Default: both lungs in one crop (as TotalSegmentator runs it). ENGINE_SPLIT_LUNGS=1 runs one lung
+    # at a time to save memory, but the model then sees less context (untested for accuracy).
     parts = [np.isin(lobe_map, (1, 2, 3)), np.isin(lobe_map, (4, 5))]
-    if os.environ.get("ENGINE_SPLIT_LUNGS", "1") == "0" or not all(x.any() for x in parts):
+    if os.environ.get("ENGINE_SPLIT_LUNGS", "0") == "0" or not all(x.any() for x in parts):
         parts = [lobe_map > 0]
     for part in parts:
         lo, hi = lung_crop(part, sp, margin_mm=15)
