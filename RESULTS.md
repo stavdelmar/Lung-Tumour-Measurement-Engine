@@ -7,7 +7,7 @@ All figures are made by `python results/make_figures.py` from the CSVs in `resul
 ## The question
 
 The lab's measure of success (Naomi, Research Director): **cut Daniel's time per scan roughly in half, with no drop in measurement quality**, and results Naomi can open and defend.
-Daniel's log: **~39 min per baseline scan, ~55 per follow-up**. His biggest time sink is **searching** for nodules (10–20 min, two full passes over 250–400 images), then matching follow-ups to the prior scan.
+Daniel's log: **~39 min per baseline scan, ~55 per follow-up**. About **two-thirds of incoming scans are follow-ups** (Daniel), so the average incoming scan takes **~50 min** (⅓ × 39 + ⅔ × 55). Target: **~25 min per incoming scan**. His biggest time sink is **searching** for nodules (10–20 min, two full passes over 250–400 images), then matching follow-ups to the prior scan.
 So the tool attacks searching first, then outlining/measuring, matching and typing into his sheet.
 
 ## Summary
@@ -20,7 +20,7 @@ So the tool attacks searching first, then outlining/measuring, matching and typi
 | Lobe | 100% agree with the expert outline's lobe | Works |
 | Matching to the prior scan | 24 / 24 tumour pairs correct | Works (small sample) |
 | Export to Daniel's sheet | 18 columns, exact order and formats; edit trail sheet; 23/23 automated checks | Works (tested on synthetic data; real-file check **TBD**) |
-| Time saved | **TBD** (pilot) | **TBD** |
+| Time saved | before ~50 min per incoming scan (weighted); after **TBD** (pilot) | **TBD** |
 
 ## 1. What works
 
@@ -43,7 +43,8 @@ So the tool attacks searching first, then outlining/measuring, matching and typi
 
 ### Central tumours are missed
 All 7 misses (4 patients) are **central tumours touching the hilum or mediastinum**, 14–52 mm, with model probability ~0 inside the tumour. This is a limit of the model, not of our settings. Daniel told us central tumours are common in their cohort, so this matters.
-→ **The app does not let a scan be approved until Daniel ticks "I checked the hilum and mediastinum"**, with a one-click switch to the mediastinal window and an "Add nodule" button. *(Planned: an engine "possible central mass" flag — result TBD.)*
+→ **The app does not let a scan be approved until Daniel ticks "I checked the hilum and mediastinum"**, with a one-click switch to the mediastinal window and an "Add nodule" button.
+→ **We tried an automatic "possible central mass, check here" flag (3 ideas, ~2 h) and did not keep it.** Two ideas flagged none of the missed tumours (3 of 4 sit inside the lung outline, not in a dent). The best one flagged 4 of the 7 missed scans but also raised 107 false flags on the other 52 scans (49 of 52 flagged), so it would teach Daniel to ignore it. Code and numbers: `engine/experiments/`. The manual check stays.
 
 ### Outlines are not yet as precise as an expert
 ![Error vs expert](results/figures/outline_error_vs_expert.png)
@@ -62,18 +63,24 @@ We tried three outline methods on the same 52 tumours and kept the best ("model 
 
 ## 3. How we measured time saved
 
-**TBD — protocol, to be run Sat/Sun:**
-- **Before:** Daniel's own log, column "Minutes on scan" (whole process: loading, finding, measuring, typing). Last 5 rows: 38, 49, 30, 37 (baseline), 55 (follow-up). *Full column requested.*
-- **After:** the app's built-in timer, same definition (scan opened → approved, total wall-clock), plus "active" time without idle. Logged per scan in `results/time_log.csv`.
-- **Who:** a pilot by the developer on RIDER scans (baseline + follow-up), and Daniel when he tries the first version. Results are reported separately and labelled — a developer is not Daniel.
-- **Target:** half → ~20 min baseline, ~27 min follow-up.
+**The headline number is minutes per incoming scan, weighted by the lab's real mix: ⅓ baseline, ⅔ follow-up.** Baseline and follow-up are also shown on their own, because the tool helps them differently (follow-ups add matching to the prior scan).
+
+| | Share of incoming scans | Before (Daniel's log) | Target (half) | After (app timer) | Saved |
+|---|---|---|---|---|---|
+| Baseline | ⅓ | 39 min | ~20 min | TBD | TBD |
+| Follow-up | ⅔ | 55 min | ~28 min | TBD | TBD |
+| **Per incoming scan (weighted)** | | **~50 min** | **~25 min** | **TBD** | **TBD** |
+
+Weighted = ⅓ × baseline + ⅔ × follow-up, computed the same way for before and after (`results/make_figures.py`).
 
 ![Time](results/figures/time_before_after.png)
 
-| Scan | Before (Daniel's log) | After (app timer) | Who | Notes |
-|---|---|---|---|---|
-| Baseline | 39 min | TBD | | |
-| Follow-up | 55 min | TBD | | |
+**Protocol (pilot Sat/Sun, TBD):**
+- **Before:** Daniel's log, column "Minutes on scan". His definition covers the whole process: loading the study, choosing the series, finding, measuring, outlining, typing into the sheet.
+- **After:** the app's built-in timer, same definition: total wall-clock time from opening the scan to approving it, summed over visits. The app also records "active" time (idle and hidden tab removed); we report total, because that matches Daniel's log. Logged per scan in `results/time_log.csv`.
+- **Who:** a pilot by the developer on RIDER scans (baseline + follow-up), then Daniel when he tries the first version. Reported separately and labelled: a developer is not Daniel.
+
+**How solid the "before" number is:** so far we have only the last 5 rows of Daniel's log (baseline 38, 49, 30, 37; follow-up 55). **The follow-up figure is a single scan, and follow-ups carry ⅔ of the weight**, so the ~50 min mostly rests on one data point. The full column has been requested; the numbers will be updated when it arrives. The ⅔ share is Daniel's estimate ("about two-thirds").
 
 ## 4. Limits — said out loud
 

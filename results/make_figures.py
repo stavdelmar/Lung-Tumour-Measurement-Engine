@@ -122,33 +122,53 @@ def method_figure(found, noise_mm, noise_pct):
     plt.close(fig)
 
 
-def time_figure():
-    """Before vs after minutes per scan. 'Before' = Daniel's log; 'after' = app timer (results/time_log.csv)."""
-    before = {"Baseline": 39, "Follow-up": 55}  # Daniel's log, last 5 rows (update when full column arrives)
+# Daniel's log, "Minutes on scan" (whole process). Last 5 rows: baseline 38, 49, 30, 37; follow-up 55.
+# Update when the full column arrives.
+BEFORE = {"Baseline": 39, "Follow-up": 55}
+# Daniel (16 Oct): about two-thirds of incoming scans are follow-ups.
+MIX = {"Baseline": 1 / 3, "Follow-up": 2 / 3}
+
+
+def weighted(d):
+    """Average minutes per incoming scan, using the lab's scan mix. None if a timepoint is missing."""
+    if any(k not in d or pd.isna(d[k]) for k in MIX):
+        return None
+    return sum(MIX[k] * d[k] for k in MIX)
+
+
+def time_numbers():
+    """Before / after minutes per timepoint plus the weighted average per incoming scan."""
+    before = dict(BEFORE)
     log = HERE / "time_log.csv"  # columns: timepoint (Baseline|Follow-up), total_minutes, active_minutes, who
     after = {}
     if log.exists():
         t = pd.read_csv(log)
         after = t.groupby("timepoint")["total_minutes"].median().to_dict()
-    fig, ax = plt.subplots(figsize=(7, 3.6))
-    x = np.arange(len(before))
-    ax.bar(x - 0.19, list(before.values()), 0.36, color=INK2, label="Before (Daniel's log)")
-    for i, v in enumerate(before.values()):
-        ax.text(i - 0.19, v + 1, f"{v}", ha="center", fontsize=10)
-    if after:
-        vals = [after.get(k, np.nan) for k in before]
-        ax.bar(x + 0.19, vals, 0.36, color=BLUE, label="With LungMarker (app timer)")
-        for i, v in enumerate(vals):
-            if not np.isnan(v):
-                ax.text(i + 0.19, v + 1, f"{v:.0f}", ha="center", fontsize=10)
-    else:
-        for i in x:
+    before["Weighted"] = weighted(before)
+    after["Weighted"] = weighted(after)
+    return before, after
+
+
+def time_figure(before, after):
+    """Before vs after: baseline, follow-up, and the weighted average per incoming scan (the headline)."""
+    groups = ["Baseline", "Follow-up", "Weighted"]
+    labels = ["Baseline", "Follow-up", "Per incoming scan\n(weighted: \u2153 baseline, \u2154 follow-up)"]
+    x = np.array([0, 1, 2.3])  # small gap before the headline group
+    fig, ax = plt.subplots(figsize=(8.5, 4))
+    for i, g in zip(x, groups):
+        b = before[g]
+        ax.bar(i - 0.19, b, 0.36, color=INK2, label="Before (Daniel's log)" if g == "Baseline" else None)
+        ax.text(i - 0.19, b + 1, f"{b:.0f}", ha="center", fontsize=10, fontweight="bold" if g == "Weighted" else None)
+        a = after.get(g)
+        if a is not None and not pd.isna(a):
+            ax.bar(i + 0.19, a, 0.36, color=BLUE, label="With LungMarker (app timer)" if g == "Baseline" else None)
+            ax.text(i + 0.19, a + 1, f"{a:.0f}", ha="center", fontsize=10, fontweight="bold" if g == "Weighted" else None)
+        else:
             ax.text(i + 0.19, 3, "pending\npilot", ha="center", fontsize=9, color=INK2)
-    halved = [v / 2 for v in before.values()]
-    for i, h in enumerate(halved):
-        ax.plot([i - 0.4, i + 0.4], [h, h], ls="--", color=ORANGE, lw=1.2)
+        ax.plot([i - 0.4, i + 0.4], [b / 2, b / 2], ls="--", color=ORANGE, lw=1.2)
     ax.plot([], [], ls="--", color=ORANGE, label="Naomi's target: half")
-    ax.set_xticks(x, list(before.keys()))
+    ax.axvline(1.65, color=GRID, lw=1)
+    ax.set_xticks(x, labels)
     ax.set_ylabel("minutes per scan (whole process)")
     ax.set_title("Time per scan", loc="left", fontweight="bold")
     ax.legend(frameon=False, fontsize=9, loc="upper left")
@@ -166,13 +186,21 @@ def main():
     finding_figure(f)
     lm, vm, lin, vin = error_figure(found, noise_mm, noise_pct)
     method_figure(found, noise_mm, noise_pct)
-    time_figure()
+    before, after = time_numbers()
+    time_figure(before, after)
     ev = m[m.tumour_matched.notna()]
     print(f"expert repeat noise (n={n_pairs}): {noise_mm:.1f} mm, {noise_pct:.0f}%")
     print(f"found {len(found)}/{len(f)}; long err median {lm:.1f} mm ({100*lin:.0f}% within); "
           f"vol err median {vm:.0f}% ({100*vin:.0f}% within)")
     print(f"matching: {int((ev.tumour_matched == True).sum())}/{len(ev)} tumour pairs matched; "
           f"registration error median {m.registration_error_mm.median():.1f} mm")
+    def fmt(d, k):
+        v = d.get(k)
+        return "pending" if v is None or pd.isna(v) else f"{v:.0f} min"
+    for k in ["Baseline", "Follow-up", "Weighted"]:
+        b, a = before[k], after.get(k)
+        saved = "" if a is None or pd.isna(a) else f", saved {100 * (1 - a / b):.0f}%"
+        print(f"time {k}: before {b:.1f} min, after {fmt(after, k)}{saved}, target {b / 2:.0f} min")
     print(f"figures written to {OUT}")
 
 
