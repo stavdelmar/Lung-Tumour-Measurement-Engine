@@ -56,3 +56,28 @@ def halo_per_nodule(nod, hu, spacing, lungs=None, hu_min=-750, max_band=4.0, fra
         g = halo(m, hu[big], spacing, band, hu_min, None if lungs is None else lungs[big])
         out[big] |= g
     return out
+
+
+def halo_adaptive(nod, hu, spacing, lungs=None, hu_min=-750, max_band=4.0, step=1.0, keep_frac=0.5):
+    """Halo per model blob, band chosen by the IMAGE, not by the blob's size: grow in `step` mm shells
+    up to `max_band`, and stop when less than `keep_frac` of a new shell is tissue (> hu_min).
+    A faint rim around the core keeps the growth going; air around a small solid nodule stops it early.
+    Reason (16 Oct re-measure): the model sometimes marks only a 4-7 mm piece of a 13-20 mm part-solid
+    tumour, so a band scaled to the core's size is far too small there."""
+    lab, n = ndi.label(nod, np.ones((3, 3, 3)))
+    out = np.zeros_like(nod)
+    for i, sl in enumerate(ndi.find_objects(lab), 1):
+        pad = int(np.ceil(max_band / min(spacing))) + 3
+        big = tuple(slice(max(s.start - pad, 0), s.stop + pad) for s in sl)
+        core = lab[big] == i
+        dist = ndi.distance_transform_edt(~core, sampling=spacing)
+        tissue = hu[big] > hu_min
+        band = step
+        while band < max_band:
+            shell = (dist > band) & (dist <= band + step)
+            if shell.any() and (tissue & shell).sum() / shell.sum() < keep_frac:
+                break
+            band += step
+        g = halo(core, hu[big], spacing, band, hu_min, None if lungs is None else lungs[big])
+        out[big] |= g
+    return out
