@@ -30,9 +30,11 @@ def run_scan(ct_path, meta=None, cache_npz=None, min_long_mm=4.0, patch=None, st
     t = time.time()
     # Outline = model outline + 'halo' (pulls in the faint rim the model leaves out). Chosen from the
     # 59-scan exam (16 Oct): long axis error median 2.8 mm vs 6.0 mm for the bare model, MedSAM 2 10.7 mm.
+    # Band per nodule (16 Oct evening): image-driven for cores < 16 mm, 4 mm for larger ones
+    # (results/halo_variants_found52.csv: long axis within 2.3 mm 24/52 vs 19/52 fixed, no failures on small tumours).
     if os.environ.get("ENGINE_OUTLINE", "halo") == "halo" and nod.any():
         core = nod
-        nod = outline.halo_per_nodule(nod, hu, sp, lobes)
+        nod = outline.halo_adaptive(nod, hu, sp, lobes)
     else:
         core = nod
     nodules, labels = measure.components(nod, prob, sp, min_long_mm=min_long_mm, ct_hu=hu,

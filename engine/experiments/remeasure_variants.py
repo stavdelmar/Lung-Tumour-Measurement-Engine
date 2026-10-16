@@ -20,7 +20,8 @@ def run(nii, cache, keys, frac, out=None):
         r = dict(key=key, exp_L=e["long_axis_mm"], exp_V=e["volume_mm3"])
         for name, fn in (("fixed", lambda: outline.halo(core, hu, sp, 4.0, -750, lobes)),
                          ("scaled", lambda: outline.halo_per_nodule(core, hu, sp, lobes)),
-                         ("adaptive", lambda: outline.halo_adaptive(core, hu, sp, lobes, keep_frac=frac))):
+                         ("adaptive", lambda: outline.halo_adaptive(core, hu, sp, lobes, keep_frac=frac, full_band_core_mm=1e9, speck_core_mm=0)),
+                         ("hybrid", lambda: outline.halo_adaptive(core, hu, sp, lobes, keep_frac=frac))):
             o = fn(); lab, _ = ndi.label(o, np.ones((3, 3, 3)))
             ids, c = np.unique(lab[m & (lab > 0)], return_counts=True); pm = lab == ids[c.argmax()]
             q = measure.measure_nodule(pm, hu, sp)

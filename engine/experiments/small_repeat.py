@@ -11,7 +11,8 @@ from engine import measure, outline, match
 
 VARIANTS = {"fixed": lambda c, hu, sp, lb: outline.halo(c, hu, sp, 4.0, -750, lb),
             "scaled": lambda c, hu, sp, lb: outline.halo_per_nodule(c, hu, sp, lb),
-            "adaptive": lambda c, hu, sp, lb: outline.halo_adaptive(c, hu, sp, lb)}
+            "adaptive": lambda c, hu, sp, lb: outline.halo_adaptive(c, hu, sp, lb, full_band_core_mm=1e9, speck_core_mm=0),
+            "hybrid": lambda c, hu, sp, lb: outline.halo_adaptive(c, hu, sp, lb)}
 
 
 def load(nii, cache, pid, scan):
@@ -21,9 +22,12 @@ def load(nii, cache, pid, scan):
 
 
 def main():
+    import os
     nii, cache, out = sys.argv[1:4]
-    rows = []
+    rows = list(csv.DictReader(open(out))) if os.path.exists(out) else []  # append (run one patient per process: memory)
     for pid in sys.argv[4:]:
+        if any(r["patient"] == pid for r in rows):
+            continue
         try:
             T = load(nii, cache, pid, "TEST"); R = load(nii, cache, pid, "RETEST")
         except Exception as ex:
@@ -45,6 +49,8 @@ def main():
                                  d_vol_pct=round(100 * abs(a["volume_mm3"] - b["volume_mm3"]) / (0.5 * (a["volume_mm3"] + b["volume_mm3"])))))
             n = [r for r in rows if r["patient"] == pid and r["variant"] == v]
             print(pid, v, len(n), "pairs <16mm", flush=True)
+        if not any(r["patient"] == pid for r in rows):
+            rows.append(dict(patient=pid, variant="none", long_t="", long_r="", vol_t="", vol_r="", d_long="", d_vol_pct=""))
         with open(out, "w", newline="") as f:
             w = csv.DictWriter(f, fieldnames=list(rows[0])); w.writeheader(); w.writerows(rows)
 

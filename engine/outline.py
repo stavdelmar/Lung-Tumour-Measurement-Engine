@@ -58,18 +58,28 @@ def halo_per_nodule(nod, hu, spacing, lungs=None, hu_min=-750, max_band=4.0, fra
     return out
 
 
-def halo_adaptive(nod, hu, spacing, lungs=None, hu_min=-750, max_band=4.0, step=1.0, keep_frac=0.5):
+def halo_adaptive(nod, hu, spacing, lungs=None, hu_min=-750, max_band=4.0, step=1.0, keep_frac=0.5, full_band_core_mm=16.0, speck_core_mm=3.5):
     """Halo per model blob, band chosen by the IMAGE, not by the blob's size: grow in `step` mm shells
     up to `max_band`, and stop when less than `keep_frac` of a new shell is tissue (> hu_min).
     A faint rim around the core keeps the growth going; air around a small solid nodule stops it early.
     Reason (16 Oct re-measure): the model sometimes marks only a 4-7 mm piece of a 13-20 mm part-solid
-    tumour, so a band scaled to the core's size is far too small there."""
+    tumour, so a band scaled to the core's size is far too small there.
+    Cores >= `full_band_core_mm` (equivalent diameter) get the full band, as in the 59-scan exam
+    (on large tumours the adaptive stop shortened the long axis by ~2 mm). Specks with cores < `speck_core_mm`
+    keep a 1 mm band. DEFAULT since 16 Oct."""
     lab, n = ndi.label(nod, np.ones((3, 3, 3)))
     out = np.zeros_like(nod)
     for i, sl in enumerate(ndi.find_objects(lab), 1):
         pad = int(np.ceil(max_band / min(spacing))) + 3
         big = tuple(slice(max(s.start - pad, 0), s.stop + pad) for s in sl)
         core = lab[big] == i
+        d = 2 * ((core.sum() * np.prod(spacing) * 3 / (4 * np.pi)) ** (1 / 3))
+        if d < speck_core_mm:  # model speck: keep the old 1 mm band (else a vessel/pleura can grow it into a 'finding')
+            out[big] |= halo(core, hu[big], spacing, step, hu_min, None if lungs is None else lungs[big])
+            continue
+        if d >= full_band_core_mm:
+            out[big] |= halo(core, hu[big], spacing, max_band, hu_min, None if lungs is None else lungs[big])
+            continue
         dist = ndi.distance_transform_edt(~core, sampling=spacing)
         tissue = hu[big] > hu_min
         band = step
