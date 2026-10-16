@@ -11,7 +11,7 @@ import numpy as np
 from scipy import ndimage as ndi
 from scipy.spatial import ConvexHull
 
-SOLID_HU = -300  # voxels denser than this count as solid tissue
+SOLID_HU = -300  # voxels denser than this count as solid tissue (= looks solid on the lung window)
 
 
 def _corners(ys, xs, sy, sx):
@@ -81,7 +81,10 @@ def measure_nodule(mask, ct_hu, spacing_zyx, lobe_map=None, instance_numbers=Non
         typ, solid_mm = "Ground-glass", None
     else:
         typ = "Part-solid"
-        solid_mm = round(max(axes_2d(solid[k], sy, sx)[0] for k in zs), 1)
+        # Daniel's SOP: solid component = long axis of the solid core, measured on the lung window, on the
+        # key slice (where the nodule's long axis is measured). "Solid on the lung window" = denser than
+        # SOLID_HU (-300 HU), the tissue that stays white like vessels; the faint ground-glass rim does not.
+        solid_mm = round(axes_2d(solid[z], sy, sx)[0], 1) if solid[z].any() else 0.0
     lobe, touches = None, False
     if lobe_map is not None:
         lab = lobe_map[mask]

@@ -29,5 +29,5 @@ if __name__ == "__main__":
                 print(sid, len(f["findings"]), "findings:",
                       [(x["finding_id"], x["lobe"], x["long_axis_mm"], x["type_guess"],
                         (x["match"] or {}).get("prior_finding_id")) for x in f["findings"]], flush=True)
-    sys.argv = ["export_static", out] + ids
+    sys.argv = ["export_static", out] + ids + ["--windows", os.environ.get("DEMO_WINDOWS", "lung,mediastinal")]
     export_static.main()

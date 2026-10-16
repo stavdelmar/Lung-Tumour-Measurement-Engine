@@ -38,12 +38,18 @@ def run_scan(ct_path, meta=None, cache_npz=None, min_long_mm=4.0, patch=None, st
     nodules, labels = measure.components(nod, prob, sp, min_long_mm=min_long_mm, ct_hu=hu,
                                          lobe_map=lobes, instance_numbers=inst)
     # Type is judged on the model's core (the halo rim is faint by design and would make every
-    # nodule look 'Part-solid').
+    # nodule look 'Part-solid'). The solid component is then measured on the FINAL outline's key slice
+    # (Daniel's SOP: long axis of the solid core on the slice where the nodule is measured).
     for i, n in enumerate(nodules):
         c = core & (labels == i + 1)
-        if c.any():
-            cm = measure.measure_nodule(c, hu, sp)
-            n["type"], n["solid_component_mm"] = cm["type"], cm["solid_component_mm"]
+        if not c.any():
+            continue
+        n["type"] = measure.measure_nodule(c, hu, sp)["type"]
+        n["solid_component_mm"] = None
+        if n["type"] == "Part-solid":
+            z = n["slice_index"]
+            sol = (labels[z] == i + 1) & (hu[z] > measure.SOLID_HU)
+            n["solid_component_mm"] = round(measure.axes_2d(sol, sp[1], sp[2])[0], 1) if sol.any() else 0.0
     for n in nodules:
         n["source"] = "ai"
         n["match_to_prior"] = None
