@@ -4,9 +4,13 @@ import numpy as np, SimpleITK as sitk
 from scipy import ndimage as ndi
 from engine import measure, outline
 
-def run(nii, cache, keys, frac):
-    rows = []
+def run(nii, cache, keys, frac, out=None):
+    import os
+    rows = list(csv.DictReader(open(out))) if out and os.path.exists(out) else []
+    done = {r["key"] for r in rows}
     for key in keys:
+        if key in done:
+            continue
         pid, scan = key.rsplit("_", 1)
         ct = sitk.ReadImage(f"{nii}/{pid}_{scan}_ct.nii.gz"); hu = sitk.GetArrayFromImage(ct)
         sp = tuple(np.array(ct.GetSpacing())[::-1])
@@ -30,10 +34,11 @@ def run(nii, cache, keys, frac):
                 if measure.axes_2d((lab[s] == j).max(0), sp[1], sp[2])[0] >= 4: n += 1
             r[f"{name}_others"] = n
         rows.append(r); print(r, flush=True)
+        if out:  # save after every scan (resumable)
+            with open(out, "w", newline="") as f:
+                w = csv.DictWriter(f, fieldnames=list(r)); w.writeheader(); w.writerows(rows)
     return rows
 
 if __name__ == "__main__":
     nii, cache, frac, out = sys.argv[1], sys.argv[2], float(sys.argv[3]), sys.argv[4]
-    rows = run(nii, cache, sys.argv[5:], frac)
-    with open(out, "w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=list(rows[0])); w.writeheader(); w.writerows(rows)
+    run(nii, cache, sys.argv[5:], frac, out)
