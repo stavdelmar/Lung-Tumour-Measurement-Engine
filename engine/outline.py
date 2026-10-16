@@ -37,3 +37,22 @@ def halo(mask, hu, spacing, band_mm=4.0, hu_min=-750, lungs=None):
     out = np.isin(lab, keep)
     full = mask.copy(); full[sl] = out
     return full
+
+
+def halo_per_nodule(nod, hu, spacing, lungs=None, hu_min=-750, max_band=4.0, frac=0.25):
+    """Halo applied to each model blob separately, with the growth band scaled to the blob's size
+    (25% of its core diameter, 1-4 mm). The 59-scan exam only had tumours of 14-66 mm; a fixed 4 mm
+    band would inflate 4-6 mm nodules (and push sub-4 mm specks over the 4 mm reporting line)."""
+    lab, n = ndi.label(nod, np.ones((3, 3, 3)))
+    out = np.zeros_like(nod)
+    for i, sl in enumerate(ndi.find_objects(lab), 1):
+        core = lab[sl] == i
+        d = 2 * ((core.sum() * np.prod(spacing) * 3 / (4 * np.pi)) ** (1 / 3))  # equivalent diameter
+        band = float(np.clip(frac * d, 1.0, max_band))
+        pad = int(np.ceil(band / min(spacing))) + 3
+        big = tuple(slice(max(s.start - pad, 0), s.stop + pad) for s in sl)
+        m = np.zeros(nod[big].shape, bool)
+        m[tuple(slice(s.start - b.start, s.stop - b.start) for s, b in zip(sl, big))] = core
+        g = halo(m, hu[big], spacing, band, hu_min, None if lungs is None else lungs[big])
+        out[big] |= g
+    return out

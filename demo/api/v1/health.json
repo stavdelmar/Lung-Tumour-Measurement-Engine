@@ -1,0 +1,1 @@
+{"status": "ok", "engine_version": "0.1.0", "mode": "static", "research_use_only": true, "models": {"detector": "TotalSegmentator lung_nodules (nnU-Net, BlueMind AI)", "lobes": "TotalSegmentator total 3mm", "segmenter": "same as detector + click-to-correct"}, "refine_available": false}

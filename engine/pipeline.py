@@ -3,7 +3,7 @@ import json, os, time
 import numpy as np
 import SimpleITK as sitk
 
-from . import detect, measure
+from . import detect, measure, outline
 
 ENGINE_VERSION = "0.1.0"
 
@@ -28,8 +28,22 @@ def run_scan(ct_path, meta=None, cache_npz=None, min_long_mm=4.0, patch=None, st
             np.savez_compressed(cache_npz, lobes=lobes, nod=nod, prob=prob.astype(np.float16))
     inst = meta.get("instance_numbers") if meta else None
     t = time.time()
+    # Outline = model outline + 'halo' (pulls in the faint rim the model leaves out). Chosen from the
+    # 59-scan exam (16 Oct): long axis error median 2.8 mm vs 6.0 mm for the bare model, MedSAM 2 10.7 mm.
+    if os.environ.get("ENGINE_OUTLINE", "halo") == "halo" and nod.any():
+        core = nod
+        nod = outline.halo_per_nodule(nod, hu, sp, lobes)
+    else:
+        core = nod
     nodules, labels = measure.components(nod, prob, sp, min_long_mm=min_long_mm, ct_hu=hu,
                                          lobe_map=lobes, instance_numbers=inst)
+    # Type is judged on the model's core (the halo rim is faint by design and would make every
+    # nodule look 'Part-solid').
+    for i, n in enumerate(nodules):
+        c = core & (labels == i + 1)
+        if c.any():
+            cm = measure.measure_nodule(c, hu, sp)
+            n["type"], n["solid_component_mm"] = cm["type"], cm["solid_component_mm"]
     for n in nodules:
         n["source"] = "ai"
         n["match_to_prior"] = None
