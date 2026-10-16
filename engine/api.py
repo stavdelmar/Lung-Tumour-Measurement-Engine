@@ -27,7 +27,7 @@ STATE = os.environ.get("ENGINE_STATE", "data/state")
 os.makedirs(STATE, exist_ok=True)
 TIMEPOINT = {"TEST": "Baseline", "RETEST": "Follow-up 1"}
 WINDOWS = {"lung": (-600, 1500), "mediastinal": (40, 350)}  # level, width
-LOW_CONF = 0.5
+LOW_CONF = 0.6  # mean model probability inside the outline (see measure.components)
 
 app = FastAPI(title="Lung nodule engine", version=ENGINE_VERSION, description="Research use only.")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
@@ -168,7 +168,8 @@ def to_finding(n, s, labels_k, prior=None):
         flags.append("possible_vessel")
     return dict(
         finding_id=n["nodule_id"].replace("N", "F"), source=n.get("source", "ai"),
-        confidence=n.get("confidence"), type_guess=n["type"], lobe=n["lobe"],
+        confidence=n.get("confidence"), detection_max_prob=n.get("detection_max_prob"),
+        type_guess=n["type"], lobe=n["lobe"],
         key_slice_z=s.z_api(n["slice_index"]), key_slice_number=n["slice_number"],
         centroid_zyx=[round((s.n - 1 - cz) if s.flip else cz, 1), cy, cx],
         bbox_zyx=[[za, y0, x0], [zb, y1 - 1, x1 - 1]],

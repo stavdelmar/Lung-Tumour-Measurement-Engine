@@ -11,7 +11,11 @@ Everything returns arrays on the original CT grid (z, y, x), so measurements sta
 import os, tempfile
 import numpy as np
 import SimpleITK as sitk
-import torch
+
+try:  # torch is only needed to RUN the models; measuring/matching/demo building works without it
+    import torch
+except ImportError:  # pragma: no cover
+    torch = None
 
 TS_HOME = os.path.expanduser(os.environ.get("TOTALSEG_HOME_DIR", "~/.totalsegmentator"))
 LOBE_MODEL = f"{TS_HOME}/nnunet/results/Dataset297_TotalSegmentator_total_3mm_1559subj/nnUNetTrainer_4000epochs_NoMirroring__nnUNetPlans__3d_fullres"

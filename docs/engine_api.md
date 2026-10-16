@@ -36,7 +36,9 @@ As v0, plus **[v1]** `research_use_only`, `match_summary` (`new_in_current`, `no
 
 **Finding** = v0 fields, with:
 - `finding_id`: `F1`, `F2`… largest volume first. Stable across refines; an added nodule gets the next number.
-- `confidence`: max model probability inside the finding (0–1). `null` for user-added.
+- `confidence` **[v1.1, 16 Oct]**: mean model probability over the drawn outline (0–1) = how much of the outline the model
+  itself marked. (The max probability saturates at 1.0 for every finding, so it said nothing; it stays available as
+  `detection_max_prob`.) Low = the outline was largely extended by the rim step → check the edges. `null` for user-added.
 - `type_guess`: from density of the core (`Solid` ≥80% voxels > −300 HU, `Ground-glass` <10%, else `Part-solid`).
 - **[v1] extra fields:** `source` (`ai` | `user_click`), `mean_diameter_mm`, `solid_component_mm` (Part-solid only),
   `mean_hu`, `n_slices`.
@@ -44,9 +46,12 @@ As v0, plus **[v1]** `research_use_only`, `match_summary` (`new_in_current`, `no
   short = longest diameter perpendicular to it. Endpoints in `long_axis_px` / `short_axis_px` as `[[x,y],[x,y]]`.
 - `volume_mm3` from the 3D outline (voxel count × voxel volume).
 - `match` (follow-ups only): `{prior_scan_id, prior_finding_id, distance_mm, confidence, set_by}`; a suggestion.
-- `flags`: `low_confidence` (<0.5), `below_4mm`, `touches_pleura` (>20% outside the lung mask),
+- `flags`: `low_confidence` (confidence < 0.6), `below_4mm`, `touches_pleura` (>20% outside the lung mask),
   `possible_vessel` (thin and tall: z-extent > 2.5 × long axis and long axis < 10 mm).
 - **[v1]** The engine returns only findings with long axis ≥ 4 mm (so `below_4mm` appears only after a refine).
+
+## Demo hosting
+Static demo (4 patients, both windows) on Amazon S3. **Base URL:** `https://lungmarker-demo-data-sd.s3.eu-north-1.amazonaws.com/api/v1`.
 
 ## 6. Refine (live only) — `POST /api/v1/scans/{scan_id}/refine`
 Request exactly as v0: `finding_id` (null = add a missed nodule), `z`, `points` (`label` 1 = nodule, 0 = not),

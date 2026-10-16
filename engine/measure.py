@@ -135,7 +135,11 @@ def components(nod_mask, prob=None, spacing_zyx=(1, 1, 1), min_long_mm=4.0, ct_h
         for key in ("long_axis_px", "short_axis_px"):
             if meas[key]:
                 meas[key] = [[p[0] + off[1], p[1] + off[2]] for p in meas[key]]
-        meas["confidence"] = round(float(prob[m].max()), 2) if prob is not None else None
+        # The model's MAX probability saturates at 1.0 for every finding, so it says nothing. Instead:
+        # confidence = mean model probability over the drawn outline = how much of the outline the
+        # model itself marked (low = the outline was mostly extended by the rim step -> check the edges).
+        meas["confidence"] = round(float(prob[m].astype(np.float32).mean()), 2) if prob is not None else None
+        meas["detection_max_prob"] = round(float(prob[m].max()), 2) if prob is not None else None
         meas["bbox"] = [[int(s.start), int(s.stop)] for s in sl]
         k += 1
         keep[m] = k

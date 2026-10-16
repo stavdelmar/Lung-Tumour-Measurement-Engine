@@ -1,9 +1,10 @@
 # Static demo of the engine API ("demo mode")
 
-Read-only copy of the engine API (contract v1, `docs/engine_api.md`) for 3 RIDER patients (test = Baseline,
-retest = Follow-up 1, 15 minutes apart), lung window only. Base URL for the app:
-`https://raw.githubusercontent.com/stavdelmar/Lung-Tumour-Measurement-Tool/main/demo`
-(all paths start with `/api/v1`). `refine` is not available here (health.json says `refine_available: false`).
+The demo data is hosted on Amazon S3 (not in this repo, to keep the repo small):
 
-AI drafts come from the Colab exam (TotalSegmentator lung_nodules + size-scaled halo outline), built with
-`python -m engine.build_demo`. Public RIDER data (CC BY 3.0, TCIA). **Research use only.**
+**Base URL for the app:** `https://lungmarker-demo-data-sd.s3.eu-north-1.amazonaws.com/api/v1`
+
+Contents: 4 RIDER patients (test = Baseline, retest = Follow-up 1), lung + mediastinal windows, contract v1
+(`docs/engine_api.md`). `refine` is not available (static files; `health.json` says `refine_available: false`).
+Rebuild it with `python -m engine.build_demo NII CACHE STATE OUT <patients>` from the Colab AI cache.
+Credits and research-use statement: `DATA_README.txt` (also at the bucket root as `README.txt`).
