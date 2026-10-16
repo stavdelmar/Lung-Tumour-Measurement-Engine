@@ -1,0 +1,24 @@
+scans 59 | found 52
+             scans  found
+expert_type              
+Part-solid       6      4
+Solid           53     48
+MISSED:
+              patient    scan  expert_long  expert_vol expert_lobe expert_type  n_candidates  max_prob_in_tumour
+4   RIDER-1286684383    TEST         52.0        7145         LLL       Solid             1               0.000
+5   RIDER-1286684383  RETEST         39.0        4176         LLL       Solid             1               0.000
+16  RIDER-1760553574    TEST         25.4        4608         LLL  Part-solid             3               0.000
+17  RIDER-1760553574  RETEST         31.5        3914         LLL  Part-solid             2               0.000
+18  RIDER-1801720707    TEST         13.8         553         RML       Solid             3               0.036
+26  RIDER-2073083717    TEST         33.6        6114         RUL       Solid             0               0.000
+27  RIDER-2073083717  RETEST         29.1        5021         RUL       Solid             0               0.000
+model    n=52 Dice med 0.774 | long err med 6.0 mm (signed -6.0), within 2.3mm 12% | short err med 3.5 | vol err med 26% (signed -26%), within 17% 29% | too long 1, by tail 0 | too short 45
+halo     n=52 Dice med 0.772 | long err med 2.8 mm (signed +0.8), within 2.3mm 38% | short err med 3.3 | vol err med 20% (signed +5%), within 17% 48% | too long 17, by tail 4 | too short 15
+medsam2  n=52 Dice med 0.732 | long err med 10.7 mm (signed +5.8), within 2.3mm 23% | short err med 5.1 | vol err med 48% (signed +30%), within 17% 10% | too long 31, by tail 2 | too short 9
+lobe agree 100% type agree 98%
+slice # within 2 of expert 62%
+candidates per scan: median 3.0 range 0 29
+timing GPU nodules_s median 48.7 lobes_s 4.9 medsam2_s 11.6
+pairs 28 | tumour pair evaluable 24 matched 24
+registration error med 2.9 max 13.9 >10mm: 1
+candidates seen in both scans (retest side): 134 / 164 = 82% | test side 134 / 163
