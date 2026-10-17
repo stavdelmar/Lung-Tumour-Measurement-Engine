@@ -14,6 +14,8 @@ Engine chat. Research use only. Raw data: engine repo `results/finding_exam_all5
 - **Pattern:** the model finds nodules surrounded by lung; it misses **central tumours touching the hilum or mediastinum**, even big ones. Daniel must still check the hilum and mediastinal borders, and add a missed tumour by hand.
 - **Other candidates:** median 3 per scan (range 0–29; one patient with many small nodules has 28–29). **82% of candidates are found in both the test and the retest scan**, taken 15 minutes apart. This is a proxy only, because RIDER doesn't mark other nodules. About 1 in 5 candidates appears in only one scan: either a false alarm or a miss in the other scan.
 
+> **One line for the lab:** for nodules under 8 mm, diameters are stable (0.5 mm), volume is approximate (~30%).
+
 ## Outline and measurements (52 found tumours)
 | Outline method | Dice median | Long axis error, median (signed) | Long axis within 2.3 mm | Volume error, median (signed) | Volume within 17% | Too long / of which vessel tail |
 |---|---|---|---|---|---|---|
@@ -28,7 +30,7 @@ Engine chat. Research use only. Raw data: engine repo `results/finding_exam_all5
 - Key slice within 2 slices of the expert's widest slice: 62%. "Largest long axis" and "largest area" often pick different, near-equal slices.
 - Type is judged on the model's core, not the halo rim (16 Oct).
 
-## Re-measure with a smarter halo width (16 Oct evening) → new default
+## Re-measure with a smarter halo width (16 Oct evening; NOT the default, see 17 Oct check below)
 The exam's halo grows the outline up to a **fixed 4 mm** around the model's core. That inflated the smaller tumours (+2.6 mm, +25% volume) and pushed tiny specks over the 4 mm reporting line. This morning's fix (width = 25% of the core's size) helped most small tumours but **failed badly on 4 faint 13–20 mm tumours where the model marked only a 4–7 mm piece** (long axis 7–12 mm too short). Tried, on all 52 found tumours:
 
 | Halo width | Long axis within 2.3 mm | Long axis error, median (signed) | > 5 mm off | Volume within 17% | Volume error, median (signed) | Dice | Other candidates ≥ 4 mm (52 scans) |
@@ -36,14 +38,20 @@ The exam's halo grows the outline up to a **fixed 4 mm** around the model's core
 | Fixed 4 mm (exam) | 19 / 52 | 3.1 mm (+0.8) | 15 | 23 / 52 | 24% (+6%) | 0.76 | 366 |
 | Scaled to core size (16 Oct morning) | 20 / 52 | 3.0 mm (−0.3) | 19 | 27 / 52 | 14% (0%) | 0.76 | 272 |
 | Image-driven for every nodule | 24 / 52 | 2.5 mm (−1.6) | 16 | 30 / 52 | 13% (−4%) | 0.79 | 358 |
-| **Hybrid (new default)** | **24 / 52** | **2.4 mm (−0.4)** | **15** | 27 / 52 | 14% (0%) | 0.78 | **272** |
+| **Hybrid (opt-in)** | **24 / 52** | **2.4 mm (−0.4)** | **15** | 27 / 52 | 14% (0%) | 0.78 | **272** |
 
-- **Hybrid rule** (`outline.halo_adaptive`, used by `pipeline.run_scan`): model core < 16 mm → the image decides the width (grow in 1 mm steps up to 4 mm, stop when less than half of the next shell is tissue); core ≥ 16 mm → 4 mm as in the exam (the image-driven stop shortened large tumours by ~2 mm); model specks < 3.5 mm → 1 mm (otherwise a vessel can grow a speck into a false 11 mm "finding").
+- **Hybrid rule** (`outline.halo_adaptive`, `ENGINE_OUTLINE=hybrid`): model core < 16 mm → the image decides the width (grow in 1 mm steps up to 4 mm, stop when less than half of the next shell is tissue); core ≥ 16 mm → 4 mm as in the exam (the image-driven stop shortened large tumours by ~2 mm); model specks < 3.5 mm → 1 mm (otherwise a vessel can grow a speck into a false 11 mm "finding").
 - **11 tumours < 21 mm:** long axis within 2.3 mm in **10 / 11** (fixed 4 mm: 5, scaled: 6), none more than 5 mm off (scaled: 4). Volume still tends to come out ~14% small on these, so the outline check stays.
 - **41 tumours ≥ 21 mm:** identical to the exam setting.
 - **Small nodules without an expert outline (repeatability):** same nodule in test vs retest (15 min apart), 22 patients, 84 paired nodules < 16 mm (median 7 mm). **Long axis is steady: median difference 0.5 mm** (72 / 84 within 2.3 mm), with every halo width. **Volume of small nodules is not:** median 28% difference between the two scans (< 8 mm nodules: 32%). That is the voxel limit of a 5–8 mm nodule, not the halo (every width gives 18–33%). → For nodules under ~8 mm, trust the diameters; treat the volume as a rough figure.
 - **Caution:** the rule was chosen while looking at these same scans, so these numbers are somewhat optimistic. LNDb (other scanners, radiologist outlines, small and ground-glass nodules) is the independent test.
-- **Demo on S3 still uses the morning rule** (only visible change would be RIDER-1225316081's tumour 14.5 → 13.6 mm, expert 15.0); left as is until after Saturday's milestone.
+- **17 Oct check on the demo patients → hybrid NOT made the default.** Rebuilding the 4 demo patients showed what the 52 expert tumours can't: the other small nodules (no expert outline).
+  - A 5 mm nodule next to the spine (RIDER-1225316081 retest F2) grew along branching vessels to **12.9 mm** (confidence 0.11).
+  - Small nodules touching the pleura grew along the chest wall (RIDER-1532432635 F5: 4.2 → 10.3 mm). This part is fixed: only lung voxels now count when deciding to keep growing, with no change on the 11 small tumours.
+  - Test vs retest got less stable on the demo's paired nodules: one 15 mm nodule measured 11.4 mm vs 18.2 mm (morning rule: 15.1 vs 13.9).
+  - Counting only faint (ground-glass-like) tissue as rim stops the vessel growth, but breaks the faint tumours again (long axis 7–8 mm short).
+  - **Conclusion:** the same ambiguity as the central flag. The model marks only a small core in two different cases: a faint tumour that is much bigger (grow!), or a small nodule touching vessels (don't grow!). No simple image rule tells them apart.
+  - **Default = the morning rule** (width scaled to core size; the same as the S3 demo, which stays as is). Its known weak spot is the faint small tumour drawn too small, with no "unsure" flag. **The hybrid stays opt-in until LNDb**, whose radiologist outlines of small nodules are exactly the missing ground truth.
 - Raw data: `results/halo_variants_found52.csv`, `results/small_nodule_repeatability.csv`, `results/remeasure_small.csv`; scripts `engine/experiments/remeasure_variants.py`, `small_repeat.py`.
 
 ## Matching (test ↔ retest)

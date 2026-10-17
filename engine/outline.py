@@ -58,7 +58,7 @@ def halo_per_nodule(nod, hu, spacing, lungs=None, hu_min=-750, max_band=4.0, fra
     return out
 
 
-def halo_adaptive(nod, hu, spacing, lungs=None, hu_min=-750, max_band=4.0, step=1.0, keep_frac=0.5, full_band_core_mm=16.0, speck_core_mm=3.5):
+def halo_adaptive(nod, hu, spacing, lungs=None, hu_min=-750, max_band=4.0, step=1.0, keep_frac=0.5, full_band_core_mm=16.0, speck_core_mm=3.5, rim_max_hu=None):
     """Halo per model blob, band chosen by the IMAGE, not by the blob's size: grow in `step` mm shells
     up to `max_band`, and stop when less than `keep_frac` of a new shell is tissue (> hu_min).
     A faint rim around the core keeps the growth going; air around a small solid nodule stops it early.
@@ -66,7 +66,7 @@ def halo_adaptive(nod, hu, spacing, lungs=None, hu_min=-750, max_band=4.0, step=
     tumour, so a band scaled to the core's size is far too small there.
     Cores >= `full_band_core_mm` (equivalent diameter) get the full band, as in the 59-scan exam
     (on large tumours the adaptive stop shortened the long axis by ~2 mm). Specks with cores < `speck_core_mm`
-    keep a 1 mm band. DEFAULT since 16 Oct."""
+    keep a 1 mm band. Opt-in (ENGINE_OUTLINE=hybrid) since 17 Oct; see pipeline.py."""
     lab, n = ndi.label(nod, np.ones((3, 3, 3)))
     out = np.zeros_like(nod)
     for i, sl in enumerate(ndi.find_objects(lab), 1):
@@ -82,9 +82,13 @@ def halo_adaptive(nod, hu, spacing, lungs=None, hu_min=-750, max_band=4.0, step=
             continue
         dist = ndi.distance_transform_edt(~core, sampling=spacing)
         tissue = hu[big] > hu_min
+        if rim_max_hu is not None:  # count only faint (ground-glass-like) rim, not dense vessels
+            tissue &= hu[big] < rim_max_hu
+        inlung = (lungs[big] > 0) if lungs is not None else np.ones_like(core)
         band = step
         while band < max_band:
-            shell = (dist > band) & (dist <= band + step)
+            # only lung voxels count: next to the pleura the chest wall is 'tissue' and would keep it growing
+            shell = (dist > band) & (dist <= band + step) & inlung
             if shell.any() and (tissue & shell).sum() / shell.sum() < keep_frac:
                 break
             band += step
