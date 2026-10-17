@@ -95,3 +95,24 @@ def halo_adaptive(nod, hu, spacing, lungs=None, hu_min=-750, max_band=4.0, step=
         g = halo(core, hu[big], spacing, band, hu_min, None if lungs is None else lungs[big])
         out[big] |= g
     return out
+
+
+def faint_rim_growth(nod, hu, spacing, lungs=None):
+    """Per model blob: how much longer (mm, long axis on the best slice) the outline would get if the image
+    decided the halo width (halo_adaptive) instead of the default size-scaled width. A big number = a small
+    model core sitting inside a fainter, larger-looking opacity: the default outline may be far too small.
+    Used only as a WARNING (17 Oct): on the 52 RIDER tumours, growth >= 3 mm caught all 4 small tumours the
+    default drew >5 mm too small. Returns {blob label: growth_mm} and the blob label map."""
+    from .measure import axes_2d
+    lab, n = ndi.label(nod, np.ones((3, 3, 3)))
+    out = {}
+    for i, sl in enumerate(ndi.find_objects(lab), 1):
+        pad = 8
+        big = tuple(slice(max(s.start - pad, 0), s.stop + pad) for s in sl)
+        core = lab[big] == i
+        lb = None if lungs is None else lungs[big]
+        a = halo_per_nodule(core, hu[big], spacing, lb)
+        b = halo_adaptive(core, hu[big], spacing, lb)
+        L = lambda m: max((axes_2d(m[z], spacing[1], spacing[2])[0] for z in np.nonzero(m.any(axis=(1, 2)))[0]), default=0.0)
+        out[i] = round(L(b) - L(a), 1)
+    return out, lab
