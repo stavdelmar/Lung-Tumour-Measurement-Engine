@@ -139,11 +139,11 @@ def weighted(d):
 def time_numbers():
     """Before / after minutes per timepoint plus the weighted average per incoming scan."""
     before = dict(BEFORE)
-    log = HERE / "time_log.csv"  # columns: timepoint (Baseline|Follow-up), total_minutes, active_minutes, who
+    log = HERE / "time_log.csv"  # columns: timepoint (Baseline|Follow-up), active_minutes, open_minutes, who
     after = {}
     if log.exists():
         t = pd.read_csv(log)
-        after = t.groupby("timepoint")["total_minutes"].median().to_dict()
+        after = t.groupby("timepoint")["active_minutes"].median()  # = exported "Minutes on scan".to_dict()
     before["Weighted"] = weighted(before)
     after["Weighted"] = weighted(after)
     return before, after
@@ -161,7 +161,7 @@ def time_figure(before, after):
         ax.text(i - 0.19, b + 1, f"{b:.0f}", ha="center", fontsize=10, fontweight="bold" if g == "Weighted" else None)
         a = after.get(g)
         if a is not None and not pd.isna(a):
-            ax.bar(i + 0.19, a, 0.36, color=BLUE, label="With LungMarker (app timer)" if g == "Baseline" else None)
+            ax.bar(i + 0.19, a, 0.36, color=BLUE, label="With LungMarker (app timer, active min)" if g == "Baseline" else None)
             ax.text(i + 0.19, a + 1, f"{a:.0f}", ha="center", fontsize=10, fontweight="bold" if g == "Weighted" else None)
         else:
             ax.text(i + 0.19, 3, "pending\npilot", ha="center", fontsize=9, color=INK2)

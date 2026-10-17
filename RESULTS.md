@@ -32,7 +32,8 @@ So the tool attacks searching first, then outlining/measuring, matching and typi
 
 ### Matching follow-ups
 - In every pair where the tumour was found in both scans, it was **paired correctly (24 / 24)**. Lung alignment error at the tumour: median 2.9 mm.
-- The app shows the match as a **suggestion**; Daniel records it only when certain (his rule).
+- The app shows the match as a **suggestion**; Daniel records it only when certain (his rule). Approve stays blocked until every prior nodule is matched or confirmed "Not found".
+- **Limit:** in the side-by-side view, prior and current are locked together (centre, zoom, slice scrolling) by aligning on the **matched pair**, not on the engine's lung registration, which the engine doesn't export yet. So **a wrong match also misaligns the two views.** A soft "Check this match" warning (different lobe, size > 50% different, registration disagrees) is the guard for now. Next step: export each prior nodule's registered position from the engine, to lock the views on the real registration and check any hand-picked match.
 
 ### Review and export
 - Daniel sees every AI mark on the image, can accept / reject, erase part of an outline (e.g. a vessel tail), redraw it, or add a missed nodule. Volume is recorded **only after he confirms the outline**.
@@ -77,7 +78,8 @@ Weighted = ⅓ × baseline + ⅔ × follow-up, computed the same way for before 
 
 **Protocol (pilot Sat/Sun, TBD):**
 - **Before:** Daniel's log, column "Minutes on scan". His definition covers the whole process: loading the study, choosing the series, finding, measuring, outlining, typing into the sheet.
-- **After:** the app's built-in timer, same definition: total wall-clock time from opening the scan to approving it, summed over visits. The app also records "active" time (idle and hidden tab removed); we report total, because that matches Daniel's log. Logged per scan in `results/time_log.csv`.
+- **After:** the app's built-in timer, **active minutes**: time from opening the scan to approving it, summed over visits, paused after 2 min without input or when the tab is hidden. Daniel asked for this definition (17 Oct: "Minutes on scan" should not include long breaks), and it is what the app writes into "Minutes on scan". The time the scan was open is also kept ("open" minutes) and reported next to it. Logged per scan in `results/time_log.csv`.
+- **Which clocks are compared:** Daniel's "before" is what he typed into his log by hand; we can't tell exactly how he handled breaks in the past. If he counted some idle time, active minutes slightly overstate the saving, so we show open minutes too.
 - **Who:** a pilot by the developer on RIDER scans (baseline + follow-up), then Daniel when he tries the first version. Reported separately and labelled: a developer is not Daniel.
 
 **How solid the "before" number is:** so far we have only the last 5 rows of Daniel's log (baseline 38, 49, 30, 37; follow-up 55). **The follow-up figure is a single scan, and follow-ups carry ⅔ of the weight**, so the ~50 min mostly rests on one data point. The full column has been requested; the numbers will be updated when it arrives. The ⅔ share is Daniel's estimate ("about two-thirds").
