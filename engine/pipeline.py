@@ -55,6 +55,13 @@ def run_scan(ct_path, meta=None, cache_npz=None, min_long_mm=4.0, patch=None, st
             z = n["slice_index"]
             sol = (labels[z] == i + 1) & (hu[z] > measure.SOLID_HU)
             n["solid_component_mm"] = round(measure.axes_2d(sol, sp[1], sp[2])[0], 1) if sol.any() else 0.0
+    # Warning only (17 Oct): would the outline be much longer if the image chose the halo width?
+    # (small core inside a faint, larger-looking opacity -> default outline may be too small)
+    if core.any():
+        growth, blab = outline.faint_rim_growth(core, hu, sp, lobes)
+        for i, n in enumerate(nodules):
+            ids = np.unique(blab[(labels == i + 1) & (blab > 0)])
+            n["faint_rim_growth_mm"] = max([growth[int(j)] for j in ids], default=0.0)
     for n in nodules:
         n["source"] = "ai"
         n["match_to_prior"] = None

@@ -46,8 +46,13 @@ As v0, plus **[v1]** `research_use_only`, `match_summary` (`new_in_current`, `no
   short = longest diameter perpendicular to it. Endpoints in `long_axis_px` / `short_axis_px` as `[[x,y],[x,y]]`.
 - `volume_mm3` from the 3D outline (voxel count × voxel volume).
 - `match` (follow-ups only): `{prior_scan_id, prior_finding_id, distance_mm, confidence, set_by}`; a suggestion.
-- `flags`: `low_confidence` (confidence < 0.6), `below_4mm`, `touches_pleura` (>20% outside the lung mask),
-  `possible_vessel` (thin and tall: z-extent > 2.5 × long axis and long axis < 10 mm).
+- `flags`: `low_confidence` (confidence < 0.6, **or** `faint_rim`), `below_4mm`, `touches_pleura` (>20% outside the lung mask),
+  `possible_vessel` (thin and tall: z-extent > 2.5 × long axis and long axis < 10 mm),
+  **[v1.2, 17 Oct]** `faint_rim` = small model core inside a fainter, larger-looking opacity: the outline may be
+  **too small** (an image-driven rim width would make the long axis ≥ 4 mm longer; value in `faint_rim_growth_mm`).
+  Always comes with `low_confidence`, so apps that read only `low_confidence` show the warning. Note: `confidence`
+  can still be high on these findings (the outline is mostly the model's own core), so a % next to the warning
+  can look contradictory; suggested wording for `faint_rim`: "AI unsure about the edges: may be larger than drawn".
 - **[v1]** The engine returns only findings with long axis ≥ 4 mm (so `below_4mm` appears only after a refine).
 
 ## Demo hosting

@@ -51,8 +51,15 @@ The exam's halo grows the outline up to a **fixed 4 mm** around the model's core
   - Test vs retest got less stable on the demo's paired nodules: one 15 mm nodule measured 11.4 mm vs 18.2 mm (morning rule: 15.1 vs 13.9).
   - Counting only faint (ground-glass-like) tissue as rim stops the vessel growth, but breaks the faint tumours again (long axis 7–8 mm short).
   - **Conclusion:** the same ambiguity as the central flag. The model marks only a small core in two different cases: a faint tumour that is much bigger (grow!), or a small nodule touching vessels (don't grow!). No simple image rule tells them apart.
-  - **Default = the morning rule** (width scaled to core size; the same as the S3 demo, which stays as is). Its known weak spot is the faint small tumour drawn too small, with no "unsure" flag. **The hybrid stays opt-in until LNDb**, whose radiologist outlines of small nodules are exactly the missing ground truth.
+  - **Default = the morning rule** (width scaled to core size; the same as the S3 demo, which stays as is). Its known weak spot is the faint small tumour drawn too small; since 17 Oct the `faint_rim` warning flags it (see below). **The hybrid stays opt-in until LNDb**, whose radiologist outlines of small nodules are exactly the missing ground truth.
 - Raw data: `results/halo_variants_found52.csv`, `results/small_nodule_repeatability.csv`, `results/remeasure_small.csv`; scripts `engine/experiments/remeasure_variants.py`, `small_repeat.py`.
+
+## Warning for outlines that may be too small (17 Oct) → shipped
+The default outline can come out far too small when the model marks only a small core of a fainter, bigger tumour, and nothing used to warn about it. **New flag `faint_rim`:** for each nodule the engine also tries the image-driven width (the opt-in rule). If that would make the long axis **≥ 4 mm longer**, the finding gets `faint_rim` **and** `low_confidence`, so the app shows "AI unsure about the edges". The outline itself is unchanged; the value is in `faint_rim_growth_mm`.
+- **52 expert tumours:** catches **all 4** small tumours the default draws 7–12 mm too small; fires on none of the others. It does **not** catch the 14 large tumours (> 20 mm) drawn too small for other reasons (large cores always get the full 4 mm width).
+- **All 322 candidates in the 52 scans:** fires on **38 (12%)**; 8 of them were already `low_confidence`. Together, "AI unsure about the edges" now shows on **81 / 322 nodules (25%)**, up from 51 (16%). Flagged at least once in 22 of 52 scans. Threshold 3 mm would flag 16% (also catches all 4); 4 mm chosen for less noise.
+- **Demo:** adds the warning to 2 findings (RIDER-1225316081 retest F2, the 5.6 mm nodule beside branching vessels; RIDER-1332496276 retest F2, 13.9 mm). No outline, size or ID changes.
+- **Honest limits:** tuned on the same 52 tumours (only 4 positives), so the true catch rate is uncertain; some warnings will be vessels next to a small nodule rather than a faint rim (still a fair "check the edges"). Raw data: `results/faint_flag_candidates.csv`.
 
 ## Matching (test ↔ retest)
 - **The marked tumour was paired correctly in 24 / 24 pairs** where it was found in both scans.

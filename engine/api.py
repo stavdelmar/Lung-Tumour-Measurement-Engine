@@ -28,6 +28,7 @@ os.makedirs(STATE, exist_ok=True)
 TIMEPOINT = {"TEST": "Baseline", "RETEST": "Follow-up 1"}
 WINDOWS = {"lung": (-600, 1500), "mediastinal": (40, 350)}  # level, width
 LOW_CONF = 0.6  # mean model probability inside the outline (see measure.components)
+FAINT_RIM_MM = 4.0  # outline would be >= this much longer if the image chose the halo width (outline.faint_rim_growth)
 
 app = FastAPI(title="Lung nodule engine", version=ENGINE_VERSION, description="Research use only.")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
@@ -159,6 +160,11 @@ def to_finding(n, s, labels_k, prior=None):
     flags = []
     if n.get("confidence") is not None and n["confidence"] < LOW_CONF:
         flags.append("low_confidence")
+    # small model core inside a fainter, larger-looking opacity: the outline may be too SMALL (17 Oct)
+    if (n.get("faint_rim_growth_mm") or 0) >= FAINT_RIM_MM:
+        flags.append("faint_rim")
+        if "low_confidence" not in flags:
+            flags.append("low_confidence")
     if n["long_axis_mm"] < 4:
         flags.append("below_4mm")
     if n.get("touches_pleura"):
@@ -179,6 +185,7 @@ def to_finding(n, s, labels_k, prior=None):
         long_axis_px=[flip(p) for p in n["long_axis_px"]] if n.get("long_axis_px") else None,
         short_axis_px=[flip(p) for p in n["short_axis_px"]] if n.get("short_axis_px") else None,
         volume_mm3=n["volume_mm3"], mean_hu=n.get("mean_hu"), n_slices=n["n_slices"],
+        faint_rim_growth_mm=n.get("faint_rim_growth_mm"),
         contours=contours, match=None, flags=flags)
 
 
