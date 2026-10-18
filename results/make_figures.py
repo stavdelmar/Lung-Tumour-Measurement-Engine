@@ -139,46 +139,53 @@ def weighted(d):
     return sum(MIX[k] * d[k] for k in MIX)
 
 
-DANIEL_LOG = HERE / "daniel_time_log.csv"
-# Daniel's own timed reviews (he times himself and sends before/after). One row per scan he timed:
-#   timepoint (Baseline|Follow-up), phase (before|after), minutes, note (optional)
-# "before" rows = scans he did the old way during the same period; if he sends none, his log above is used.
-PILOT_LOG = HERE / "time_log.csv"
-# Developer pilot (app timer): timepoint (Baseline|Follow-up), active_minutes, open_minutes, who
+# Time-saved method (approved by Sam, 18 Oct): Daniel can't use the tool, so
+#   before = Daniel's step-by-step breakdown of his manual review (falls back to his log totals above)
+#   after  = Stav's timed runs in the tool (app timer, active minutes) on public RIDER scans
+# Both are estimates and are labelled as such.
+DANIEL_STEPS = HERE / "daniel_steps.csv"
+# One row per step of the manual review: timepoint (Baseline|Follow-up), step, minutes_low, minutes_high
+# (same value in both if Daniel gives one number). Before = sum of the step midpoints per timepoint.
+STAV_RUNS = HERE / "time_log.csv"
+# One row per timed run in the tool: timepoint (Baseline|Follow-up), scan_id, active_minutes, open_minutes, who
+
+
+def manual_steps():
+    """Daniel's step breakdown as a table, or None if not received yet."""
+    if not DANIEL_STEPS.exists():
+        return None
+    t = pd.read_csv(DANIEL_STEPS)
+    t["minutes_mid"] = (t["minutes_low"] + t["minutes_high"]) / 2
+    return t
 
 
 def time_numbers():
     """Before / after minutes per timepoint + weighted average per incoming scan.
 
-    Daniel's own timed reviews take priority over the developer pilot when the file exists.
-    Returns (before, after, source) with source in {"daniel", "pilot", None}.
+    Returns (before, after, sources): sources = {"before": "steps"|"log", "after": "stav"|None, "n_runs": {...}}.
     """
-    before, after, source = dict(BEFORE), {}, None
-    if DANIEL_LOG.exists():
-        t = pd.read_csv(DANIEL_LOG)
-        med = t.groupby(["phase", "timepoint"])["minutes"].median()
-        if "before" in med.index.get_level_values(0):
-            before.update(med["before"].to_dict())
-        if "after" in med.index.get_level_values(0):
-            after = med["after"].to_dict()
-            source = "daniel"
-    if source is None and PILOT_LOG.exists():
-        t = pd.read_csv(PILOT_LOG)
+    before, after = dict(BEFORE), {}
+    sources = {"before": "log", "after": None, "n_runs": {}}
+    steps = manual_steps()
+    if steps is not None:
+        before.update(steps.groupby("timepoint")["minutes_mid"].sum().to_dict())
+        sources["before"] = "steps"
+    if STAV_RUNS.exists():
+        t = pd.read_csv(STAV_RUNS)
         after = t.groupby("timepoint")["active_minutes"].median().to_dict()  # = exported "Minutes on scan"
-        source = "pilot"
+        sources["after"] = "stav"
+        sources["n_runs"] = t.groupby("timepoint").size().to_dict()
     before["Weighted"] = weighted(before)
     after["Weighted"] = weighted(after)
-    return before, after, source
+    return before, after, sources
 
 
-AFTER_LABEL = {"daniel": "With LungMarker (Daniel's own timing)",
-               "pilot": "With LungMarker (developer pilot, active min)", None: None}
-TITLE = {"daniel": "Time per scan: Daniel's own timed reviews",
-         "pilot": "Time per scan: estimate from a developer pilot (not the real user)",
-         None: "Time per scan"}
+BEFORE_LABEL = {"steps": "Before: Daniel's step-by-step breakdown (manual)", "log": "Before: Daniel's log (manual)"}
+AFTER_LABEL = "After: Stav's timed runs in the tool (active min)"
+TITLE = "Time per scan (ESTIMATE: Daniel's manual breakdown vs Stav's runs in the tool)"
 
 
-def time_figure(before, after, source):
+def time_figure(before, after, sources):
     """Before vs after: baseline, follow-up, and the weighted average per incoming scan (the headline)."""
     groups = ["Baseline", "Follow-up", "Weighted"]
     labels = ["Baseline", "Follow-up", "Per incoming scan\n(weighted: \u2153 baseline, \u2154 follow-up)"]
@@ -186,11 +193,11 @@ def time_figure(before, after, source):
     fig, ax = plt.subplots(figsize=(8.5, 4))
     for i, g in zip(x, groups):
         b = before[g]
-        ax.bar(i - 0.19, b, 0.36, color=INK2, label="Before (Daniel's log)" if g == "Baseline" else None)
+        ax.bar(i - 0.19, b, 0.36, color=INK2, label=BEFORE_LABEL[sources["before"]] if g == "Baseline" else None)
         ax.text(i - 0.19, b + 1, f"{b:.0f}", ha="center", fontsize=10, fontweight="bold" if g == "Weighted" else None)
         a = after.get(g)
         if a is not None and not pd.isna(a):
-            ax.bar(i + 0.19, a, 0.36, color=BLUE, label=AFTER_LABEL[source] if g == "Baseline" else None)
+            ax.bar(i + 0.19, a, 0.36, color=BLUE, label=AFTER_LABEL if g == "Baseline" else None)
             ax.text(i + 0.19, a + 1, f"{a:.0f}", ha="center", fontsize=10, fontweight="bold" if g == "Weighted" else None)
         else:
             ax.text(i + 0.19, 3, "pending", ha="center", fontsize=9, color=INK2)
@@ -199,7 +206,7 @@ def time_figure(before, after, source):
     ax.axvline(1.65, color=GRID, lw=1)
     ax.set_xticks(x, labels)
     ax.set_ylabel("minutes per scan (whole process)")
-    ax.set_title(TITLE[source], loc="left", fontweight="bold")
+    ax.set_title(TITLE, loc="left", fontweight="bold", fontsize=11)
     ax.legend(frameon=False, fontsize=9, loc="upper left")
     ax.set_ylim(0, 80)
     fig.tight_layout()
@@ -215,9 +222,14 @@ def main():
     finding_figure(f)
     lm, vm, lin, vin, nq = error_figure(noise_mm, noise_pct)
     method_figure(found, noise_mm, noise_pct)
-    before, after, source = time_numbers()
-    time_figure(before, after, source)
-    print(f"time source: {source or 'none yet'}")
+    before, after, sources = time_numbers()
+    time_figure(before, after, sources)
+    if sources["before"] == "steps":
+        for k in ["Baseline", "Follow-up"]:
+            gap = before[k] / BEFORE[k] - 1
+            flag = "  <-- differs > 20%: report both in RESULTS 4.1" if abs(gap) > 0.2 else ""
+            print(f"cross-check {k}: steps sum {before[k]:.0f} min vs log {BEFORE[k]} min ({100 * gap:+.0f}%){flag}")
+    print(f"time sources: before = {sources['before']}, after = {sources['after'] or 'none yet'}, runs = {sources['n_runs']}")
     ev = m[m.tumour_matched.notna()]
     print(f"expert repeat noise (n={n_pairs}): {noise_mm:.1f} mm, {noise_pct:.0f}%")
     print(f"found {len(found)}/{len(f)}; shipped outline: long err median {lm:.1f} mm ({lin}/{nq} within); "

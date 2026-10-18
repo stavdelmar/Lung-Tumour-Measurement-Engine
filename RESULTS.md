@@ -1,7 +1,7 @@
 # Results — LungMarker
 
 **Research use only. Not for clinical use. No clinical claims.**
-Status: draft, 18 Oct 2026. Quality and failure numbers come from a test on public data (RIDER Lung CT). Timing with the tool is pending (marked **TBD**).
+Status: draft, 18 Oct 2026. Quality and failure numbers come from a test on public data (RIDER Lung CT). Timing is an estimate (Daniel's manual breakdown vs Stav's runs in the tool), still being collected (marked **TBD**).
 Figures are made by `python results/make_figures.py` from the CSVs in `results/`, so they update when the numbers change.
 
 The lab asked for three things for its lab meeting and grant panel: **an honest timing comparison, a quality comparison, and clear failure cases.** They come first, in that order. Details follow below in the same order.
@@ -10,17 +10,16 @@ The lab asked for three things for its lab meeting and grant panel: **an honest 
 
 ## 1. Timing comparison
 
-> **Takeaway: not measured with the tool yet. Today a scan takes about 50 min on average (from 5 rows of Daniel's log); the lab's target is about 25.**
+> **Takeaway: an estimate, not a measurement of Daniel using the tool. Today a scan takes about 50 min on average (5 rows of Daniel's log); the lab's target is about 25. The "after" figure is TBD.**
 
-| | Share of incoming scans | Before (Daniel's log) | After (with LungMarker) | Source of "after" |
+| | Share of incoming scans | Before: Daniel's manual review | After: Stav's timed runs in the tool | Saved (estimate) |
 |---|---|---|---|---|
-| Baseline | ⅓ | 39 min (4 scans) | TBD | Daniel's own timed reviews (pending) |
-| Follow-up | ⅔ | 55 min (1 scan) | TBD | Daniel's own timed reviews (pending) |
-| **Per incoming scan (weighted)** | | **~50 min** | **TBD** | |
+| Baseline | ⅓ | 39 min (log, 4 scans); step breakdown TBD | TBD (n runs) | TBD |
+| Follow-up | ⅔ | 55 min (log, 1 scan); step breakdown TBD | TBD (n runs) | TBD |
+| **Per incoming scan (weighted)** | | **~50 min** | **TBD** | **TBD** |
 
-- **"Before" is thin:** 5 rows of Daniel's log, and the follow-up figure is a single scan carrying two-thirds of the weight. The ⅔ follow-up share is Daniel's estimate.
-- **"After" comes from Daniel's own timed reviews** (he is timing them now). If they don't arrive before hand-in, we show a developer pilot instead and label it as an estimate, not a measurement of the real user.
-- Both clocks use Daniel's definition: the whole process for one scan, without long breaks. Details and protocol: [section 4](#4-timing-details).
+- **How it is built:** Daniel can't use the tool on his own scans (they never leave the hospital), so the comparison combines **Daniel's step-by-step breakdown of his manual review** with **Stav's timed runs in the tool on public scans**. Both are labelled as estimates. The method was agreed with Base44's FDE lead (Sam) on 18 Oct. Full method: [section 4](#4-timing-details).
+- **Small samples:** 5 log rows so far, and the follow-up figure is a single scan carrying two-thirds of the weight. The ⅔ follow-up share is Daniel's estimate.
 
 ## 2. Quality comparison
 
@@ -66,42 +65,47 @@ Naomi told us why the vendor tool the lab tried last year failed. Each reason, a
 
 ## 4. Timing details
 
-**Headline = minutes per incoming scan, weighted by the lab's real mix (⅓ baseline, ⅔ follow-up).** Baseline and follow-up are also shown on their own, because the tool helps them differently (follow-ups add matching to the earlier scan). Naomi's target is half: ~20 min baseline, ~28 min follow-up, ~25 min per incoming scan.
+### 4.1 How the comparison was built (method)
 
-### 4.1 Daniel's own timed reviews (main result)
+**Why an estimate.** The honest measurement would be Daniel timing his own work with and without the tool on the lab's scans. That isn't possible here: the lab's scans never leave the hospital, and the tool runs on public data only. So the comparison combines two sources that can be collected now. Method agreed with Sam (Base44 FDE lead), 18 Oct.
 
-**Status: pending.** Daniel said he will keep timing his reviews and send a before/after comparison.
+**Step 1: "Before" = Daniel's manual review, step by step.** Daniel breaks his usual review into steps and gives the minutes for each (a range if it varies). The sum per scan is cross-checked against his log ("Minutes on scan": 39 min baseline, 55 min follow-up). If the two differ by more than 20%, both are reported.
 
-| | Share of incoming scans | Scans timed (before / after) | Before | After (with LungMarker) | Saved |
-|---|---|---|---|---|---|
-| Baseline | ⅓ | TBD | TBD | TBD | TBD |
-| Follow-up | ⅔ | TBD | TBD | TBD | TBD |
-| **Per incoming scan (weighted)** | | | **TBD** | **TBD** | **TBD** |
+| Step of the manual review | Baseline (min) | Follow-up (min) | What the tool changes |
+|---|---|---|---|
+| Load the study, choose the series | TBD | TBD | The scan opens with the AI marks already there (AI runs overnight in batch). |
+| Find the prior scan in the master sheet | — | TBD | The prior is already linked in the worklist. |
+| Find nodules: two full passes over 250–400 images | 10–20 (discovery) | 10–20 (discovery) | AI marks suggestions; one check pass, plus the required check of the hilum and mediastinum. |
+| Measure long and short axis per nodule | TBD | TBD | Axes drafted; the reviewer checks or edits them. |
+| Full outline (about 1 nodule in 5 today) | TBD | TBD | Outline drafted for every nodule; the reviewer checks, edits and confirms it. |
+| Match each nodule to the prior scan | — | TBD | Match suggested, prior shown side by side; the reviewer picks. |
+| Type results into the sheet, save a screenshot | TBD | TBD | One-click Excel export, usually once a day. |
+| **Total (cross-check with log: 39 / 55)** | **TBD** | **TBD** | |
 
-When his numbers arrive:
-- Put them in `results/daniel_time_log.csv` (one row per scan: `timepoint`, `phase` = before / after, `minutes`, `note`) and run `python results/make_figures.py`. The chart and printed numbers switch to his data automatically; his "before" rows replace the old log figures if he sends any.
-- Fill this table and section 1, and change the section 1 takeaway to what the numbers show, e.g. "In N timed scans, …". Move 4.2 below as supporting evidence.
-- State how many scans he timed and over what period, and whether "before" and "after" use the same definition. A handful of scans is a first signal, not a study.
+**Step 2: "After" = Stav's timed runs in the tool.** Stav reviews public RIDER scans in the live app from start to finish, baseline and follow-up, doing every step Daniel would: check each AI mark, fix outlines, match to the prior, central check, approve. The app's own timer records **active minutes** (paused after 2 min without input or a hidden tab), which is what the app writes into "Minutes on scan" and matches Daniel's definition (whole process, no long breaks; 17 Oct). Open minutes are kept and reported next to them.
 
-### 4.2 Estimate (only if Daniel's numbers don't arrive in time)
+**Step 3: Combine.** Median minutes per baseline and per follow-up, then weighted by the lab's mix (⅓ baseline, ⅔ follow-up) for the headline. The same weighting is used for before and after (`results/make_figures.py`).
 
-| | Share of incoming scans | Before (Daniel's log) | Target (half) | After (developer pilot, app timer) | Saved |
-|---|---|---|---|---|---|
-| Baseline | ⅓ | 39 min | ~20 min | TBD | TBD |
-| Follow-up | ⅔ | 55 min | ~28 min | TBD | TBD |
-| **Per incoming scan (weighted)** | | **~50 min** | **~25 min** | **TBD** | **TBD** |
+**What could push the estimate either way (said out loud):**
+- **Different people:** Stav built the tool and knows it well, which speeds her up. But she is not a trained reader, so she may check marks less thoroughly than Daniel would (faster) or less confidently (slower).
+- **Different scans:** the public test scans mostly have large, obvious tumours. Daniel's real work includes faint ground-glass nodules, his slowest cases. **This probably makes the "after" figure optimistic.**
+- **Different settings:** Stav's runs don't include the hospital's own systems (opening the study from the archive, the hospital viewer).
+- **Different clocks:** Daniel's "before" was typed into his log by hand; we can't tell exactly how he handled breaks.
+- **Small samples on both sides.** Each run and each log row is listed in the table below.
 
-Weighted = ⅓ × baseline + ⅔ × follow-up, computed the same way for before and after (`results/make_figures.py`).
+**The real measurement comes later:** in a hospital pilot, Daniel times his own reviews with and without the tool on the lab's scans (next steps).
+
+### 4.2 Numbers
+
+| | Share of incoming scans | Before: step breakdown | Before: log (cross-check) | Target (half) | After: Stav's runs (active min, n) | Saved (estimate) |
+|---|---|---|---|---|---|---|
+| Baseline | ⅓ | TBD | 39 min (4 scans) | ~20 min | TBD | TBD |
+| Follow-up | ⅔ | TBD | 55 min (1 scan) | ~28 min | TBD | TBD |
+| **Per incoming scan (weighted)** | | **TBD** | **~50 min** | **~25 min** | **TBD** | **TBD** |
 
 ![Time](results/figures/time_before_after.png)
 
-**Protocol:**
-- **Before:** Daniel's log, column "Minutes on scan". His definition covers the whole process: loading the study, choosing the series, finding, measuring, outlining, typing into the sheet.
-- **After:** the app's built-in timer, **active minutes**: time from opening the scan to approving it, summed over visits, paused after 2 min without input or when the tab is hidden. Daniel asked for this definition (17 Oct: "Minutes on scan" should not include long breaks), and it is what the app writes into "Minutes on scan". The time the scan was open is also kept ("open" minutes) and reported next to it.
-- **Which clocks are compared:** Daniel's "before" was typed into his log by hand; we can't tell exactly how he handled breaks in the past. If he counted some idle time, active minutes slightly overstate the saving, so we show open minutes too.
-- **Who (estimate only):** the developer, on public RIDER scans. The developer knows the tool better than a new user would, but is not a trained reader like Daniel.
-
-**How solid the "before" number is:** only the last 5 rows of Daniel's log (baseline 38, 49, 30, 37; follow-up 55). The follow-up figure is a single scan and carries ⅔ of the weight, so the ~50 min mostly rests on one data point. The full column has been requested.
+**Data files.** Daniel's breakdown → `results/daniel_steps.csv` (`timepoint`, `step`, `minutes_low`, `minutes_high`). Stav's runs → `results/time_log.csv` (`timepoint`, `scan_id`, `active_minutes`, `open_minutes`, `who`). `python results/make_figures.py` rebuilds the chart and prints before, after, saved and the breakdown-vs-log cross-check. Until the breakdown arrives, "before" falls back to the log totals.
 
 ## 5. Quality details
 
@@ -155,17 +159,17 @@ In the side-by-side view, the earlier and current scans are locked together (cen
 - **False alarms** can't be counted directly (one marked tumour per scan); the 82% repeat-scan agreement is only a proxy.
 - **Settings tuned on the test tumours:** the outline settings were compared on the same 52 tumours, so the quality numbers are somewhat optimistic.
 - **The RIDER follow-up is a same-day repeat scan:** it tests matching, not growth.
-- **Timing:** a small number of timed scans (or a developer pilot), not a study.
+- **Timing is an estimate,** not a measurement of Daniel using the tool: his manual breakdown vs Stav's runs on public scans, small samples on both sides (section 4.1).
 - **What we measured is the AI's first draft,** not the reviewer's confirmed values that go into the sheet.
 
 ## 8. Next steps
 
-- **Get the real timing:** Daniel's own before/after timed reviews (section 4.1), and the full "Minutes on scan" column for a stronger "before".
+- **Finish the timing estimate:** Daniel's step-by-step breakdown, Stav's timed runs, and the full "Minutes on scan" column for a stronger "before".
 - **Ground-glass test** on the public LNDb set (27 ground-glass + 46 part-solid nodules ≥ 4 mm), which also decides the outline setting for small nodules.
 - **Central tumours:** try a second model trained on lung-cancer outlines, used only where it disagrees with the nodule model; keep the manual central check until a test shows it works.
 - **Follow-up view:** export the lung alignment from the engine, so the side-by-side view and the "Check this match" warning use the real alignment.
 - **Cost for a research budget (last year's tool failed on price):** write down the full yearly cost before any rollout, namely the Base44 plan, one hospital server (an existing machine if it has a GPU or at least 8 GB of memory; CPU speed not yet measured) and the IT hours to set it up, so Naomi can compare it with last year's tool. No licence or per-scan fees for the AI models.
-- **Hospital pilot:** with IT, run the engine on one hospital server on a small set of the lab's own scans, and compare Daniel's confirmed values and time with his manual work.
+- **Hospital pilot (the real measurement):** with IT, run the engine on one hospital server on a small set of the lab's own scans; Daniel times his own reviews with and without the tool, and his confirmed values are compared with his manual ones.
 
 ## What the app does (for reference)
 - The reviewer sees every AI mark on the image, accepts or rejects it, fixes the outline (move, add or delete points, Erase, Draw), or adds a missed nodule. Volume is recorded **only after the reviewer confirms the outline**.
