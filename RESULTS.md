@@ -51,6 +51,17 @@ The lab asked for three things for its lab meeting and grant panel: **an honest 
 | **A wrong follow-up match** would also misalign the side-by-side view | Not seen in the test (24 / 24 correct), but possible | The match is only a suggestion the reviewer picks; a "Check this match" warning flags a different lobe, a > 50% size change or disagreement with the alignment. |
 | **Not tested** | — | **Ground-glass nodules** (none in this data set; planned on the public LNDb set). **False alarms** (the data marks one tumour per scan; only a proxy: 82% of AI marks reappear on the repeat scan). **The lab's own scans** (development used public data only). |
 
+## Why this differs from last year's tool
+
+Naomi told us why the vendor tool the lab tried last year failed. Each reason, and what we did about it:
+
+| Why last year's tool failed | What LungMarker does | Honest caveat |
+|---|---|---|
+| **1. Accept / reject only, no editing of outlines** | The reviewer edits the outline directly (move, add or delete points, Erase, Draw); axes and volume update at once. Volume is recorded only after they press Confirm outline. Every change is kept in an **edit trail**: AI draft, final value, who, when. | Editing has been tested by us, not yet by Daniel on his own scans. |
+| **2. No export to their sheet** | One-click Excel export in the lab's exact format: the same 18 columns, order and formats as the master sheet, only new rows each day, plus the edit trail as a second sheet. The sheet stays the single source of truth. | Checked on real exports from the live app and by 30 automated checks, on public test scans. |
+| **3. Needed hospital IT to install it** | The app runs in the browser: **nothing is installed on Daniel's or Naomi's computer.** | **Some IT involvement remains for real use.** Real scans can't leave the hospital, so the AI engine has to run **inside the hospital on one server**, processing scans in batch (e.g. overnight) from the image archive. IT would set up that server, connect it to the archive, and approve where data is stored: the app is a cloud service that keeps study IDs, measurements and the edit trail (not images; the browser loads the images straight from the hospital server). That is one server and a data-governance review, much less than installing software on every workstation, but not zero. |
+| **4. Too expensive for a research budget** | Built on a low-cost stack: **open-source AI models** (Apache-2.0, no licence or per-scan fees), the app on a Base44 subscription, and a free Colab GPU plus a public storage bucket for the demo. | Not yet costed for real use. Running it adds a Base44 plan, one hospital server and some IT time; the exact yearly cost still has to be written down (see next steps). |
+
 ---
 
 ## 4. Timing details
@@ -146,6 +157,15 @@ In the side-by-side view, the earlier and current scans are locked together (cen
 - **The RIDER follow-up is a same-day repeat scan:** it tests matching, not growth.
 - **Timing:** a small number of timed scans (or a developer pilot), not a study.
 - **What we measured is the AI's first draft,** not the reviewer's confirmed values that go into the sheet.
+
+## 8. Next steps
+
+- **Get the real timing:** Daniel's own before/after timed reviews (section 4.1), and the full "Minutes on scan" column for a stronger "before".
+- **Ground-glass test** on the public LNDb set (27 ground-glass + 46 part-solid nodules ≥ 4 mm), which also decides the outline setting for small nodules.
+- **Central tumours:** try a second model trained on lung-cancer outlines, used only where it disagrees with the nodule model; keep the manual central check until a test shows it works.
+- **Follow-up view:** export the lung alignment from the engine, so the side-by-side view and the "Check this match" warning use the real alignment.
+- **Cost for a research budget (last year's tool failed on price):** write down the full yearly cost before any rollout, namely the Base44 plan, one hospital server (an existing machine if it has a GPU or at least 8 GB of memory; CPU speed not yet measured) and the IT hours to set it up, so Naomi can compare it with last year's tool. No licence or per-scan fees for the AI models.
+- **Hospital pilot:** with IT, run the engine on one hospital server on a small set of the lab's own scans, and compare Daniel's confirmed values and time with his manual work.
 
 ## What the app does (for reference)
 - The reviewer sees every AI mark on the image, accepts or rejects it, fixes the outline (move, add or delete points, Erase, Draw), or adds a missed nodule. Volume is recorded **only after the reviewer confirms the outline**.
