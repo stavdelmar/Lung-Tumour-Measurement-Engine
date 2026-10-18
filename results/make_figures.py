@@ -144,8 +144,9 @@ def weighted(d):
 #   after  = Stav's timed runs in the tool (app timer, active minutes) on public RIDER scans
 # Both are estimates and are labelled as such.
 DANIEL_STEPS = HERE / "daniel_steps.csv"
-# One row per step of the manual review: timepoint (Baseline|Follow-up), step, minutes_low, minutes_high
-# (same value in both if Daniel gives one number). Before = sum of the step midpoints per timepoint.
+# One row per step of the manual review: timepoint (Baseline|Follow-up), step, unit, minutes_low, minutes_high, source.
+# Some steps are per nodule, so the per-scan "before" = Daniel's own TOTAL row (midpoint) when he gives one;
+# otherwise the sum of per-scan step midpoints. Timepoints without a breakdown fall back to the log totals.
 STAV_RUNS = HERE / "time_log.csv"
 # One row per timed run in the tool: timepoint (Baseline|Follow-up), scan_id, active_minutes, open_minutes, who
 
@@ -168,8 +169,11 @@ def time_numbers():
     sources = {"before": "log", "after": None, "n_runs": {}}
     steps = manual_steps()
     if steps is not None:
-        before.update(steps.groupby("timepoint")["minutes_mid"].sum().to_dict())
+        for tp, g in steps.groupby("timepoint"):
+            tot = g[g["step"].str.upper() == "TOTAL"]
+            before[tp] = float(tot["minutes_mid"].iloc[0]) if len(tot) else float(g["minutes_mid"].sum())
         sources["before"] = "steps"
+        sources["steps_for"] = sorted(steps["timepoint"].unique())
     if STAV_RUNS.exists():
         t = pd.read_csv(STAV_RUNS)
         after = t.groupby("timepoint")["active_minutes"].median().to_dict()  # = exported "Minutes on scan"
@@ -180,7 +184,7 @@ def time_numbers():
     return before, after, sources
 
 
-BEFORE_LABEL = {"steps": "Before: Daniel's step-by-step breakdown (manual)", "log": "Before: Daniel's log (manual)"}
+BEFORE_LABEL = {"steps": "Before: Daniel's own estimate (follow-up) / log (baseline)", "log": "Before: Daniel's log (manual)"}
 AFTER_LABEL = "After: Stav's timed runs in the tool (active min)"
 TITLE = "Time per scan (ESTIMATE: Daniel's manual breakdown vs Stav's runs in the tool)"
 
@@ -225,10 +229,10 @@ def main():
     before, after, sources = time_numbers()
     time_figure(before, after, sources)
     if sources["before"] == "steps":
-        for k in ["Baseline", "Follow-up"]:
+        for k in sources.get("steps_for", []):
             gap = before[k] / BEFORE[k] - 1
             flag = "  <-- differs > 20%: report both in RESULTS 4.1" if abs(gap) > 0.2 else ""
-            print(f"cross-check {k}: steps sum {before[k]:.0f} min vs log {BEFORE[k]} min ({100 * gap:+.0f}%){flag}")
+            print(f"cross-check {k}: Daniel's breakdown {before[k]:.0f} min vs log {BEFORE[k]} min ({100 * gap:+.0f}%){flag}")
     print(f"time sources: before = {sources['before']}, after = {sources['after'] or 'none yet'}, runs = {sources['n_runs']}")
     ev = m[m.tumour_matched.notna()]
     print(f"expert repeat noise (n={n_pairs}): {noise_mm:.1f} mm, {noise_pct:.0f}%")

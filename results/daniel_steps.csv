@@ -1,0 +1,8 @@
+timepoint,step,unit,minutes_low,minutes_high,source
+Follow-up,Loading,per scan,1,2,"Daniel, Slack 18 Oct"
+Follow-up,Re-finding + matching to the prior (aligns by bronchi/fissures; slice numbers unreliable due to breathing),per nodule,10,10,"Daniel, Slack 18 Oct (~10)"
+Follow-up,Finding new nodules (two passes over 250-400 slices),per scan,10,20,"Daniel, Slack 18 Oct"
+Follow-up,Measuring,per nodule,2,4,"Daniel, Slack 18 Oct"
+Follow-up,Full outline (when needed),per tumour when needed,15,25,"Daniel, Slack 18 Oct"
+Follow-up,Recording,per scan,3,5,"Daniel, Slack 18 Oct"
+Follow-up,TOTAL,per scan,40,55,"Daniel, Slack 18 Oct (his own total)"

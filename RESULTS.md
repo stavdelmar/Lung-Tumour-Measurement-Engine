@@ -10,16 +10,17 @@ The lab asked for three things for its lab meeting and grant panel: **an honest 
 
 ## 1. Timing comparison
 
-> **Takeaway: an estimate, not a measurement of Daniel using the tool. Today a scan takes about 50 min on average (5 rows of Daniel's log); the lab's target is about 25. The "after" figure is TBD.**
+> **Takeaway: an estimate, not a measurement of Daniel using the tool. By Daniel's own account a follow-up scan takes 40–55 min today (a baseline about 39 min, from his log); the average incoming scan is about 45 min and the lab's target is about half. The "with the tool" figure is TBD.**
 
-| | Share of incoming scans | Before: Daniel's manual review | After: Stav's timed runs in the tool | Saved (estimate) |
+| | Share of incoming scans | Before: Daniel's manual review | With the tool: Stav's timed runs | Saved (estimate) |
 |---|---|---|---|---|
-| Baseline | ⅓ | 39 min (log, 4 scans); step breakdown TBD | TBD (n runs) | TBD |
-| Follow-up | ⅔ | 55 min (log, 1 scan); step breakdown TBD | TBD (n runs) | TBD |
-| **Per incoming scan (weighted)** | | **~50 min** | **TBD** | **TBD** |
+| Baseline | ⅓ | ~39 min (log, 4 scans; no step breakdown yet) | TBD (n runs) | TBD |
+| Follow-up | ⅔ | 40–55 min, midpoint ~48 (Daniel's own breakdown, 18 Oct); log: 55 min (1 scan) | TBD (n runs) | TBD |
+| **Per incoming scan (weighted)** | | **~45 min** (~50 with the log figure) | **TBD** | **TBD** |
 
-- **How it is built:** Daniel can't use the tool on his own scans (they never leave the hospital), so the comparison combines **Daniel's step-by-step breakdown of his manual review** with **Stav's timed runs in the tool on public scans**. Both are labelled as estimates. The method was agreed with Base44's FDE lead (Sam) on 18 Oct. Full method: [section 4](#4-timing-details).
-- **Small samples:** 5 log rows so far, and the follow-up figure is a single scan carrying two-thirds of the weight. The ⅔ follow-up share is Daniel's estimate.
+- **How it is built:** Daniel can't use the tool on his own scans (they never leave the hospital), so the comparison combines **Daniel's step-by-step account of his manual review** with **Stav's timed runs in the tool on public scans**. Everything here is an estimate. Method agreed with Base44's FDE lead (Sam) on 18 Oct; full method and step table in [section 4](#4-timing-details).
+- **We use the lower "before" (~45 min) for the headline,** so the saving is not overstated; the log-based ~50 min is shown next to it.
+- **Small samples:** 5 log rows, Daniel's breakdown is for follow-ups only, and the ⅔ follow-up share is his estimate.
 
 ## 2. Quality comparison
 
@@ -69,20 +70,9 @@ Naomi told us why the vendor tool the lab tried last year failed. Each reason, a
 
 **Why an estimate.** The honest measurement would be Daniel timing his own work with and without the tool on the lab's scans. That isn't possible here: the lab's scans never leave the hospital, and the tool runs on public data only. So the comparison combines two sources that can be collected now. Method agreed with Sam (Base44 FDE lead), 18 Oct.
 
-**Step 1: "Before" = Daniel's manual review, step by step.** Daniel breaks his usual review into steps and gives the minutes for each (a range if it varies). The sum per scan is cross-checked against his log ("Minutes on scan": 39 min baseline, 55 min follow-up). If the two differ by more than 20%, both are reported.
+**Step 1: "Before" = Daniel's manual review, step by step.** Daniel described his usual follow-up review step by step, with minutes per step (Slack, 18 Oct; table in 4.2). Some steps are per nodule, so the per-scan "before" is **his own stated total, 40–55 min** (midpoint ~48), not a sum we calculated. It is cross-checked against his log (one follow-up row: 55 min; −14%, within the 20% we set for reporting a mismatch). He has not given a baseline breakdown yet, so the baseline uses his log (~39 min, 4 scans).
 
-| Step of the manual review | Baseline (min) | Follow-up (min) | What the tool changes |
-|---|---|---|---|
-| Load the study, choose the series | TBD | TBD | The scan opens with the AI marks already there (AI runs overnight in batch). |
-| Find the prior scan in the master sheet | — | TBD | The prior is already linked in the worklist. |
-| Find nodules: two full passes over 250–400 images | 10–20 (discovery) | 10–20 (discovery) | AI marks suggestions; one check pass, plus the required check of the hilum and mediastinum. |
-| Measure long and short axis per nodule | TBD | TBD | Axes drafted; the reviewer checks or edits them. |
-| Full outline (about 1 nodule in 5 today) | TBD | TBD | Outline drafted for every nodule; the reviewer checks, edits and confirms it. |
-| Match each nodule to the prior scan | — | TBD | Match suggested, prior shown side by side; the reviewer picks. |
-| Type results into the sheet, save a screenshot | TBD | TBD | One-click Excel export, usually once a day. |
-| **Total (cross-check with log: 39 / 55)** | **TBD** | **TBD** | |
-
-**Step 2: "After" = Stav's timed runs in the tool.** Stav reviews public RIDER scans in the live app from start to finish, baseline and follow-up, doing every step Daniel would: check each AI mark, fix outlines, match to the prior, central check, approve. The app's own timer records **active minutes** (paused after 2 min without input or a hidden tab), which is what the app writes into "Minutes on scan" and matches Daniel's definition (whole process, no long breaks; 17 Oct). Open minutes are kept and reported next to them.
+**Step 2: "With the tool" = Stav's timed runs only.** The "with the tool" minutes are **measured whole-scan times from Stav's runs**, not estimated step by step. Stav reviews public RIDER scans in the live app from start to finish, baseline and follow-up, doing every step Daniel would: check each AI mark, fix outlines, match to the prior, central check, approve. The app's own timer records **active minutes** (paused after 2 min without input or a hidden tab), which is what the app writes into "Minutes on scan" and matches Daniel's definition (whole process, no long breaks; 17 Oct). Open minutes are kept and reported next to them.
 
 **Step 3: Combine.** Median minutes per baseline and per follow-up, then weighted by the lab's mix (⅓ baseline, ⅔ follow-up) for the headline. The same weighting is used for before and after (`results/make_figures.py`).
 
@@ -97,15 +87,31 @@ Naomi told us why the vendor tool the lab tried last year failed. Each reason, a
 
 ### 4.2 Numbers
 
-| | Share of incoming scans | Before: step breakdown | Before: log (cross-check) | Target (half) | After: Stav's runs (active min, n) | Saved (estimate) |
+**Daniel's manual follow-up review, step by step** (his words, Slack, 18 Oct), and what the tool does to each step. The tool column describes the design; it is not a measured time per step.
+
+| Step | Daniel today (manual) | What the tool does | Removed / shortened / kept |
+|---|---|---|---|
+| Loading | 1–2 min per scan | The scan opens from the worklist with the AI's marks already there (the AI runs beforehand, in batch); the prior scan is already linked. | Shortened |
+| Re-finding each prior nodule and matching it | ~10 min **per nodule**: he aligns by bronchi and fissures because slice numbers are unreliable (breathing) | The AI suggests the match, and the prior and current scans open side by side, centred on the pair. He confirms or picks another; every prior nodule must be matched or marked "Not found". | Shortened (he still verifies each match) |
+| Finding new nodules | 10–20 min per scan: two full passes over 250–400 slices | The AI marks candidates; one check pass, plus a required check of the hilum and mediastinum, where the AI misses tumours. | Shortened (the check stays) |
+| Measuring | 2–4 min **per nodule** | Long and short axis drafted on the slice where the nodule is largest; he checks or edits them. | Shortened |
+| Full outline | 15–25 min **per tumour, when needed** | Outline drafted for every nodule; he checks, edits and confirms it. Volume is then recorded for every confirmed nodule, not only the ones he outlines today. | Shortened per tumour; done for more nodules than today |
+| Recording | 3–5 min per scan | Values are saved as he goes; one Excel export into his sheet's format, usually once a day. | Removed from the per-scan time (one export a day) |
+| *New:* deciding on each AI mark | — | Accept or reject every AI suggestion, including false marks. | Added |
+| *New:* central-areas check | — | Required tick before Approve: "I checked the hilum and mediastinum". | Added |
+| **Total** | **40–55 min** (his own total) | **Measured as a whole: Stav's timed runs, below** | |
+
+**Per scan, before vs with the tool (estimates):**
+
+| | Share of incoming scans | Before: Daniel | Before: log (cross-check) | Target (half) | With the tool: Stav's runs (active min, n) | Saved (estimate) |
 |---|---|---|---|---|---|---|
-| Baseline | ⅓ | TBD | 39 min (4 scans) | ~20 min | TBD | TBD |
-| Follow-up | ⅔ | TBD | 55 min (1 scan) | ~28 min | TBD | TBD |
-| **Per incoming scan (weighted)** | | **TBD** | **~50 min** | **~25 min** | **TBD** | **TBD** |
+| Baseline | ⅓ | no breakdown yet → log | ~39 min (4 scans) | ~20 min | TBD | TBD |
+| Follow-up | ⅔ | 40–55 min (midpoint ~48) | 55 min (1 scan) | ~24 min | TBD | TBD |
+| **Per incoming scan (weighted)** | | **~45 min** | **~50 min** | **~22 min** | **TBD** | **TBD** |
 
 ![Time](results/figures/time_before_after.png)
 
-**Data files.** Daniel's breakdown → `results/daniel_steps.csv` (`timepoint`, `step`, `minutes_low`, `minutes_high`). Stav's runs → `results/time_log.csv` (`timepoint`, `scan_id`, `active_minutes`, `open_minutes`, `who`). `python results/make_figures.py` rebuilds the chart and prints before, after, saved and the breakdown-vs-log cross-check. Until the breakdown arrives, "before" falls back to the log totals.
+**Data files.** Daniel's breakdown → `results/daniel_steps.csv` (`timepoint`, `step`, `unit`, `minutes_low`, `minutes_high`, `source`; a `TOTAL` row holds his own per-scan total). Stav's runs → `results/time_log.csv` (`timepoint`, `scan_id`, `active_minutes`, `open_minutes`, `who`). `python results/make_figures.py` rebuilds the chart and prints before, after, saved and the breakdown-vs-log cross-check. Timepoints without a breakdown (baseline, for now) use the log totals.
 
 ## 5. Quality details
 

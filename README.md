@@ -17,7 +17,7 @@ and exports straight into the lab's Excel master sheet with an edit trail.
 
 Built for a simulated research lab (Harbor Thoracic Oncology Lab): **Naomi Hart**, Research Director, and **Daniel Reyes**,
 Research Fellow, who measures every scan by hand. Their study has ~390 scans waiting; today a scan takes Daniel
-~39 min (baseline) or ~55 min (follow-up), and two-thirds of incoming scans are follow-ups.
+~39 min (baseline, from his log) or 40–55 min (follow-up, his own step-by-step estimate), and two-thirds of incoming scans are follow-ups.
 
 > "In practice, if I'm still scrolling through every slice to find the nodules, the volume tool doesn't save me much overall time."
 > — Daniel, on our first proposal (which put outlining first)
