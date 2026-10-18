@@ -1,0 +1,9 @@
+patient,timepoint,active_minutes,open_minutes,nodules_reviewed,who,note
+RIDER-1225316081,Baseline,1,1,2,SD,
+RIDER-1225316081,Follow-up 1,12,20,3,SD,exclude: scan left open while writing messages
+RIDER-1332496276,Baseline,1,1,2,SD,
+RIDER-1332496276,Follow-up 1,1,1,2,SD,
+RIDER-1500037140,Baseline,2,2,4,SD,
+RIDER-1500037140,Follow-up 1,2,2,4,SD,
+RIDER-1532432635,Baseline,2,2,5,SD,incl. 2 rejected
+RIDER-1532432635,Follow-up 1,2,2,5,SD,incl. 1 rejected + 1 not found

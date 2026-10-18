@@ -139,16 +139,17 @@ def weighted(d):
     return sum(MIX[k] * d[k] for k in MIX)
 
 
-# Time-saved method (approved by Sam, 18 Oct): Daniel can't use the tool, so
-#   before = Daniel's step-by-step breakdown of his manual review (falls back to his log totals above)
-#   after  = Stav's timed runs in the tool (app timer, active minutes) on public RIDER scans
-# Both are estimates and are labelled as such.
+# Time-saved method (approved by Sam, 18 Oct; everything is an ESTIMATE):
+#   before        = Daniel's step-by-step account of his manual review (results/daniel_steps.csv),
+#                   timepoints without one fall back to his log totals above
+#   tool overhead = Stav's timed runs in the tool (results/time_log.csv): the tool's mechanics only
+#                   (opening, confirming, editing, matching, export) by a developer, NOT a reader's judgement
+#   with the tool = overhead + the reader's judgement time on each step the tool shortens -> NOT measured,
+#                   so it is reported as a range, never as one number or a % saved.
 DANIEL_STEPS = HERE / "daniel_steps.csv"
-# One row per step of the manual review: timepoint (Baseline|Follow-up), step, unit, minutes_low, minutes_high, source.
-# Some steps are per nodule, so the per-scan "before" = Daniel's own TOTAL row (midpoint) when he gives one;
-# otherwise the sum of per-scan step midpoints. Timepoints without a breakdown fall back to the log totals.
 STAV_RUNS = HERE / "time_log.csv"
-# One row per timed run in the tool: timepoint (Baseline|Follow-up), scan_id, active_minutes, open_minutes, who
+# time_log.csv: patient, timepoint (Baseline | Follow-up 1), active_minutes, open_minutes, nodules_reviewed, who, note
+# Rows whose note starts with "exclude" are left out (e.g. scan left open while doing something else).
 
 
 def manual_steps():
@@ -160,59 +161,77 @@ def manual_steps():
     return t
 
 
-def time_numbers():
-    """Before / after minutes per timepoint + weighted average per incoming scan.
+def overhead_runs():
+    """Stav's pilot runs (included rows only), timepoint normalised to Baseline / Follow-up."""
+    if not STAV_RUNS.exists():
+        return None, 0
+    t = pd.read_csv(STAV_RUNS)
+    excluded = t["note"].fillna("").str.lower().str.startswith("exclude")
+    t = t[~excluded].copy()
+    t["timepoint"] = t["timepoint"].str.replace(r"^Follow-up.*", "Follow-up", regex=True)
+    return t, int(excluded.sum())
 
-    Returns (before, after, sources): sources = {"before": "steps"|"log", "after": "stav"|None, "n_runs": {...}}.
-    """
-    before, after = dict(BEFORE), {}
-    sources = {"before": "log", "after": None, "n_runs": {}}
+
+def time_numbers():
+    """Before (Daniel) per timepoint + weighted; tool overhead (measured); bracket for 'with the tool' (follow-up)."""
+    before = dict(BEFORE)
     steps = manual_steps()
+    fu_total, fu_record = None, None
     if steps is not None:
         for tp, g in steps.groupby("timepoint"):
             tot = g[g["step"].str.upper() == "TOTAL"]
             before[tp] = float(tot["minutes_mid"].iloc[0]) if len(tot) else float(g["minutes_mid"].sum())
-        sources["before"] = "steps"
-        sources["steps_for"] = sorted(steps["timepoint"].unique())
-    if STAV_RUNS.exists():
-        t = pd.read_csv(STAV_RUNS)
-        after = t.groupby("timepoint")["active_minutes"].median().to_dict()  # = exported "Minutes on scan"
-        sources["after"] = "stav"
-        sources["n_runs"] = t.groupby("timepoint").size().to_dict()
+        fu = steps[steps["timepoint"] == "Follow-up"]
+        tot = fu[fu["step"].str.upper() == "TOTAL"]
+        rec = fu[fu["step"].str.lower().str.startswith("recording")]
+        if len(tot):
+            fu_total = (float(tot["minutes_low"].iloc[0]), float(tot["minutes_high"].iloc[0]))
+        if len(rec):
+            fu_record = (float(rec["minutes_low"].iloc[0]), float(rec["minutes_high"].iloc[0]))
     before["Weighted"] = weighted(before)
-    after["Weighted"] = weighted(after)
-    return before, after, sources
+    runs, n_excluded = overhead_runs()
+    overhead = None
+    if runs is not None and len(runs):
+        a = runs["active_minutes"]
+        overhead = {"min": float(a.min()), "median": float(a.median()), "max": float(a.max()), "n": int(len(a)),
+                    "n_excluded": n_excluded, "nodules": (int(runs["nodules_reviewed"].min()), int(runs["nodules_reviewed"].max()))}
+    # Upper end of 'with the tool' for a follow-up: today's time minus the step the tool removes (recording),
+    # i.e. as if checking each AI draft took as long as doing the step by hand. Could be higher still if the
+    # new steps (deciding on each AI mark, the central check) add time.
+    upper = (fu_total[0] - fu_record[1], fu_total[1] - fu_record[0]) if fu_total and fu_record else None
+    return before, overhead, fu_total, upper
 
 
-BEFORE_LABEL = {"steps": "Before: Daniel's own estimate (follow-up) / log (baseline)", "log": "Before: Daniel's log (manual)"}
-AFTER_LABEL = "After: Stav's timed runs in the tool (active min)"
-TITLE = "Time per scan (ESTIMATE: Daniel's manual breakdown vs Stav's runs in the tool)"
-
-
-def time_figure(before, after, sources):
-    """Before vs after: baseline, follow-up, and the weighted average per incoming scan (the headline)."""
-    groups = ["Baseline", "Follow-up", "Weighted"]
-    labels = ["Baseline", "Follow-up", "Per incoming scan\n(weighted: \u2153 baseline, \u2154 follow-up)"]
-    x = np.array([0, 1, 2.3])  # small gap before the headline group
-    fig, ax = plt.subplots(figsize=(8.5, 4))
-    for i, g in zip(x, groups):
-        b = before[g]
-        ax.bar(i - 0.19, b, 0.36, color=INK2, label=BEFORE_LABEL[sources["before"]] if g == "Baseline" else None)
-        ax.text(i - 0.19, b + 1, f"{b:.0f}", ha="center", fontsize=10, fontweight="bold" if g == "Weighted" else None)
-        a = after.get(g)
-        if a is not None and not pd.isna(a):
-            ax.bar(i + 0.19, a, 0.36, color=BLUE, label=AFTER_LABEL if g == "Baseline" else None)
-            ax.text(i + 0.19, a + 1, f"{a:.0f}", ha="center", fontsize=10, fontweight="bold" if g == "Weighted" else None)
-        else:
-            ax.text(i + 0.19, 3, "pending", ha="center", fontsize=9, color=INK2)
-        ax.plot([i - 0.4, i + 0.4], [b / 2, b / 2], ls="--", color=ORANGE, lw=1.2)
-    ax.plot([], [], ls="--", color=ORANGE, label="Naomi's target: half")
-    ax.axvline(1.65, color=GRID, lw=1)
-    ax.set_xticks(x, labels)
-    ax.set_ylabel("minutes per scan (whole process)")
-    ax.set_title(TITLE, loc="left", fontweight="bold", fontsize=11)
-    ax.legend(frameon=False, fontsize=9, loc="upper left")
-    ax.set_ylim(0, 80)
+def time_figure(fu_total, overhead, upper):
+    """Range chart for one follow-up scan: Daniel today vs what is known about 'with the tool'.
+    Deliberately NOT a before/after bar pair: the measured part (tool mechanics) is not comparable to a reader's time."""
+    fig, ax = plt.subplots(figsize=(9, 3.2))
+    y_today, y_tool = 1.0, 0.0
+    if fu_total:
+        lo, hi = fu_total
+        ax.barh(y_today, lo, 0.42, color=INK2)
+        ax.barh(y_today, hi - lo, 0.42, left=lo, color=INK2, alpha=0.45)
+        ax.text(hi + 0.8, y_today, f"{lo:.0f}\u2013{hi:.0f} min (Daniel's own estimate)", va="center", fontsize=9.5)
+    if overhead:
+        ax.barh(y_tool, overhead["max"], 0.42, color=BLUE)
+        ax.text(overhead["max"] + 0.5, y_tool + 0.33,
+                f"tool mechanics, measured: {overhead['min']:.0f}\u2013{overhead['max']:.0f} active min "
+                f"(n = {overhead['n']}, developer, not a reader)", va="center", fontsize=9, color=INK)
+    if upper and overhead:
+        ax.barh(y_tool, upper[1] - overhead["max"], 0.42, left=overhead["max"], color=SURFACE,
+                edgecolor=INK2, hatch="///", linewidth=0.8)
+        ax.text((overhead["max"] + upper[1]) / 2, y_tool - 0.36,
+                "+ reader's judgement on the checked steps: NOT MEASURED (somewhere in this range)",
+                ha="center", va="center", fontsize=9, color=INK2)
+        ax.text(upper[1] + 0.8, y_tool, f"up to ~{upper[0]:.0f}\u2013{upper[1]:.0f} min if checking\ntakes as long as doing it by hand",
+                va="center", fontsize=8.5, color=INK2)
+    ax.set_yticks([y_tool, y_today], ["With the tool\n(estimate)", "Daniel today\n(manual)"])
+    ax.set_xlim(0, 80)
+    ax.set_ylim(-0.75, 1.5)
+    ax.set_xlabel("minutes per follow-up scan")
+    ax.grid(axis="y", visible=False)
+    ax.set_title("One follow-up scan: what we know, and what we haven't measured (ESTIMATE)", loc="left",
+                 fontweight="bold", fontsize=11)
     fig.tight_layout()
     fig.savefig(OUT / "time_before_after.png", dpi=200)
     plt.close(fig)
@@ -226,27 +245,17 @@ def main():
     finding_figure(f)
     lm, vm, lin, vin, nq = error_figure(noise_mm, noise_pct)
     method_figure(found, noise_mm, noise_pct)
-    before, after, sources = time_numbers()
-    time_figure(before, after, sources)
-    if sources["before"] == "steps":
-        for k in sources.get("steps_for", []):
-            gap = before[k] / BEFORE[k] - 1
-            flag = "  <-- differs > 20%: report both in RESULTS 4.1" if abs(gap) > 0.2 else ""
-            print(f"cross-check {k}: Daniel's breakdown {before[k]:.0f} min vs log {BEFORE[k]} min ({100 * gap:+.0f}%){flag}")
-    print(f"time sources: before = {sources['before']}, after = {sources['after'] or 'none yet'}, runs = {sources['n_runs']}")
-    ev = m[m.tumour_matched.notna()]
-    print(f"expert repeat noise (n={n_pairs}): {noise_mm:.1f} mm, {noise_pct:.0f}%")
-    print(f"found {len(found)}/{len(f)}; shipped outline: long err median {lm:.1f} mm ({lin}/{nq} within); "
-          f"vol err median {vm:.0f}% ({vin}/{nq} within)")
-    print(f"matching: {int((ev.tumour_matched == True).sum())}/{len(ev)} tumour pairs matched; "
-          f"registration error median {m.registration_error_mm.median():.1f} mm")
-    def fmt(d, k):
-        v = d.get(k)
-        return "pending" if v is None or pd.isna(v) else f"{v:.0f} min"
-    for k in ["Baseline", "Follow-up", "Weighted"]:
-        b, a = before[k], after.get(k)
-        saved = "" if a is None or pd.isna(a) else f", saved {100 * (1 - a / b):.0f}%"
-        print(f"time {k}: before {b:.1f} min, after {fmt(after, k)}{saved}, target {b / 2:.0f} min")
+    before, overhead, fu_total, upper = time_numbers()
+    time_figure(fu_total, overhead, upper)
+    print(f"before: baseline {before['Baseline']:.0f} min, follow-up {before['Follow-up']:.1f} min, weighted {before['Weighted']:.1f} min")
+    if fu_total:
+        print(f"follow-up today (Daniel): {fu_total[0]:.0f}-{fu_total[1]:.0f} min; log cross-check {BEFORE['Follow-up']} min")
+    if overhead:
+        print(f"tool overhead (developer pilot): {overhead['min']:.0f}-{overhead['max']:.0f} active min, median {overhead['median']:.0f}, "
+              f"n = {overhead['n']} ({overhead['n_excluded']} excluded), {overhead['nodules'][0]}-{overhead['nodules'][1]} nodules per scan")
+    if upper and overhead:
+        print(f"with the tool, follow-up: between {overhead['min']:.0f}-{overhead['max']:.0f} min (mechanics only) and ~{upper[0]:.0f}-{upper[1]:.0f} min "
+              f"(judgement as slow as doing it by hand); judgement time NOT measured")
     print(f"figures written to {OUT}")
 
 
