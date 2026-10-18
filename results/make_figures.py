@@ -63,10 +63,13 @@ def finding_figure(f):
     plt.close(fig)
 
 
-def error_figure(found, noise_mm, noise_pct):
-    """Per-tumour error vs the expert, with the expert's own repeat noise as a band."""
-    long_err = (found.halo_long - found.expert_long).sort_values().to_numpy()
-    vol_err = (100 * (found.halo_vol - found.expert_vol) / found.expert_vol).sort_values().to_numpy()
+def error_figure(noise_mm, noise_pct):
+    """Per-tumour error of the SHIPPED outline (halo scaled to core size) vs the expert,
+    with the expert's own repeat noise as a band. Source: halo_variants_found52.csv (52 found tumours)."""
+    v = pd.read_csv(HERE / "halo_variants_found52.csv")
+    long_err = v["scaled_dL"].sort_values().to_numpy()
+    vol_err = v["scaled_dV%"].sort_values().to_numpy()
+    n = len(v)
     fig, axes = plt.subplots(1, 2, figsize=(11, 4))
     for ax, err, band, unit, title in [
         (axes[0], long_err, noise_mm, "mm", "Long axis: AI draft minus expert"),
@@ -77,23 +80,23 @@ def error_figure(found, noise_mm, noise_pct):
         ax.axhspan(-band, band, color=BAND, zorder=0)
         ax.axhline(0, color=INK2, lw=0.8)
         ax.scatter(x[inside], err[inside], s=28, color=BLUE, zorder=3, edgecolor=SURFACE, linewidth=1.5,
-                   label=f"within expert repeat noise ({inside.sum()}/{len(err)})")
+                   label=f"within expert repeat noise ({inside.sum()}/{n})")
         ax.scatter(x[~inside], err[~inside], s=28, color=ORANGE, zorder=3, edgecolor=SURFACE, linewidth=1.5,
-                   label=f"outside ({(~inside).sum()}/{len(err)})")
+                   label=f"outside ({(~inside).sum()}/{n})")
         ax.set_xticks([])
-        ax.set_xlabel("52 found tumours, sorted by error")
+        ax.set_xlabel(f"{n} found tumours (28 patients), sorted by error")
         ax.set_ylabel(f"error ({unit})")
         ax.set_title(title, loc="left", fontweight="bold")
-        ax.text(len(err) - 1, -band, f"band = expert repeat noise ±{band:g} {unit}", ha="right", va="top",
+        ax.text(len(err) - 1, -band, f"band = expert repeat noise \u00b1{band:g} {unit}", ha="right", va="top",
                 fontsize=9, color=INK2)
         ax.legend(loc="upper left", frameon=False, fontsize=9)
-    fig.suptitle("The AI draft is close, but not yet as precise as the expert → Daniel confirms every outline",
-                 x=0.01, ha="left", fontsize=11, color=INK2)
+    fig.suptitle("AI first draft vs expert outline (RIDER, research use). Every draft is checked by the reviewer before it is recorded.",
+                 x=0.01, ha="left", fontsize=10.5, color=INK2)
     fig.tight_layout()
     fig.savefig(OUT / "outline_error_vs_expert.png", dpi=200)
     plt.close(fig)
-    return float(np.median(np.abs(long_err))), float(np.median(np.abs(vol_err))), \
-        float((np.abs(long_err) <= noise_mm).mean()), float((np.abs(vol_err) <= noise_pct).mean())
+    a_l, a_v = np.abs(long_err), np.abs(vol_err)
+    return float(np.median(a_l)), float(np.median(a_v)), int((a_l <= noise_mm).sum()), int((a_v <= noise_pct).sum()), n
 
 
 def method_figure(found, noise_mm, noise_pct):
@@ -115,7 +118,7 @@ def method_figure(found, noise_mm, noise_pct):
     ax.set_xticks(x, [m for m, _ in methods])
     ax.set_ylim(0, 100)
     ax.set_ylabel("% of found tumours")
-    ax.set_title("Outline methods tried: share within the expert's own repeat noise", loc="left", fontweight="bold")
+    ax.set_title("How the outline method was chosen (exam setting): share within expert repeat noise", loc="left", fontweight="bold", fontsize=11)
     ax.legend(frameon=False, loc="upper right", fontsize=9)
     fig.tight_layout()
     fig.savefig(OUT / "outline_methods.png", dpi=200)
@@ -210,15 +213,15 @@ def main():
     found = f[f.found == True]
     noise_mm, noise_pct, n_pairs = expert_noise()
     finding_figure(f)
-    lm, vm, lin, vin = error_figure(found, noise_mm, noise_pct)
+    lm, vm, lin, vin, nq = error_figure(noise_mm, noise_pct)
     method_figure(found, noise_mm, noise_pct)
     before, after, source = time_numbers()
     time_figure(before, after, source)
     print(f"time source: {source or 'none yet'}")
     ev = m[m.tumour_matched.notna()]
     print(f"expert repeat noise (n={n_pairs}): {noise_mm:.1f} mm, {noise_pct:.0f}%")
-    print(f"found {len(found)}/{len(f)}; long err median {lm:.1f} mm ({100*lin:.0f}% within); "
-          f"vol err median {vm:.0f}% ({100*vin:.0f}% within)")
+    print(f"found {len(found)}/{len(f)}; shipped outline: long err median {lm:.1f} mm ({lin}/{nq} within); "
+          f"vol err median {vm:.0f}% ({vin}/{nq} within)")
     print(f"matching: {int((ev.tumour_matched == True).sum())}/{len(ev)} tumour pairs matched; "
           f"registration error median {m.registration_error_mm.median():.1f} mm")
     def fmt(d, k):
