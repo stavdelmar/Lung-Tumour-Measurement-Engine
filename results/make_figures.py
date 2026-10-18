@@ -136,20 +136,46 @@ def weighted(d):
     return sum(MIX[k] * d[k] for k in MIX)
 
 
+DANIEL_LOG = HERE / "daniel_time_log.csv"
+# Daniel's own timed reviews (he times himself and sends before/after). One row per scan he timed:
+#   timepoint (Baseline|Follow-up), phase (before|after), minutes, note (optional)
+# "before" rows = scans he did the old way during the same period; if he sends none, his log above is used.
+PILOT_LOG = HERE / "time_log.csv"
+# Developer pilot (app timer): timepoint (Baseline|Follow-up), active_minutes, open_minutes, who
+
+
 def time_numbers():
-    """Before / after minutes per timepoint plus the weighted average per incoming scan."""
-    before = dict(BEFORE)
-    log = HERE / "time_log.csv"  # columns: timepoint (Baseline|Follow-up), active_minutes, open_minutes, who
-    after = {}
-    if log.exists():
-        t = pd.read_csv(log)
-        after = t.groupby("timepoint")["active_minutes"].median()  # = exported "Minutes on scan".to_dict()
+    """Before / after minutes per timepoint + weighted average per incoming scan.
+
+    Daniel's own timed reviews take priority over the developer pilot when the file exists.
+    Returns (before, after, source) with source in {"daniel", "pilot", None}.
+    """
+    before, after, source = dict(BEFORE), {}, None
+    if DANIEL_LOG.exists():
+        t = pd.read_csv(DANIEL_LOG)
+        med = t.groupby(["phase", "timepoint"])["minutes"].median()
+        if "before" in med.index.get_level_values(0):
+            before.update(med["before"].to_dict())
+        if "after" in med.index.get_level_values(0):
+            after = med["after"].to_dict()
+            source = "daniel"
+    if source is None and PILOT_LOG.exists():
+        t = pd.read_csv(PILOT_LOG)
+        after = t.groupby("timepoint")["active_minutes"].median().to_dict()  # = exported "Minutes on scan"
+        source = "pilot"
     before["Weighted"] = weighted(before)
     after["Weighted"] = weighted(after)
-    return before, after
+    return before, after, source
 
 
-def time_figure(before, after):
+AFTER_LABEL = {"daniel": "With LungMarker (Daniel's own timing)",
+               "pilot": "With LungMarker (developer pilot, active min)", None: None}
+TITLE = {"daniel": "Time per scan: Daniel's own timed reviews",
+         "pilot": "Time per scan: estimate from a developer pilot (not the real user)",
+         None: "Time per scan"}
+
+
+def time_figure(before, after, source):
     """Before vs after: baseline, follow-up, and the weighted average per incoming scan (the headline)."""
     groups = ["Baseline", "Follow-up", "Weighted"]
     labels = ["Baseline", "Follow-up", "Per incoming scan\n(weighted: \u2153 baseline, \u2154 follow-up)"]
@@ -161,18 +187,18 @@ def time_figure(before, after):
         ax.text(i - 0.19, b + 1, f"{b:.0f}", ha="center", fontsize=10, fontweight="bold" if g == "Weighted" else None)
         a = after.get(g)
         if a is not None and not pd.isna(a):
-            ax.bar(i + 0.19, a, 0.36, color=BLUE, label="With LungMarker (app timer, active min)" if g == "Baseline" else None)
+            ax.bar(i + 0.19, a, 0.36, color=BLUE, label=AFTER_LABEL[source] if g == "Baseline" else None)
             ax.text(i + 0.19, a + 1, f"{a:.0f}", ha="center", fontsize=10, fontweight="bold" if g == "Weighted" else None)
         else:
-            ax.text(i + 0.19, 3, "pending\npilot", ha="center", fontsize=9, color=INK2)
+            ax.text(i + 0.19, 3, "pending", ha="center", fontsize=9, color=INK2)
         ax.plot([i - 0.4, i + 0.4], [b / 2, b / 2], ls="--", color=ORANGE, lw=1.2)
     ax.plot([], [], ls="--", color=ORANGE, label="Naomi's target: half")
     ax.axvline(1.65, color=GRID, lw=1)
     ax.set_xticks(x, labels)
     ax.set_ylabel("minutes per scan (whole process)")
-    ax.set_title("Time per scan", loc="left", fontweight="bold")
+    ax.set_title(TITLE[source], loc="left", fontweight="bold")
     ax.legend(frameon=False, fontsize=9, loc="upper left")
-    ax.set_ylim(0, 70)
+    ax.set_ylim(0, 80)
     fig.tight_layout()
     fig.savefig(OUT / "time_before_after.png", dpi=200)
     plt.close(fig)
@@ -186,8 +212,9 @@ def main():
     finding_figure(f)
     lm, vm, lin, vin = error_figure(found, noise_mm, noise_pct)
     method_figure(found, noise_mm, noise_pct)
-    before, after = time_numbers()
-    time_figure(before, after)
+    before, after, source = time_numbers()
+    time_figure(before, after, source)
+    print(f"time source: {source or 'none yet'}")
     ev = m[m.tumour_matched.notna()]
     print(f"expert repeat noise (n={n_pairs}): {noise_mm:.1f} mm, {noise_pct:.0f}%")
     print(f"found {len(found)}/{len(f)}; long err median {lm:.1f} mm ({100*lin:.0f}% within); "
