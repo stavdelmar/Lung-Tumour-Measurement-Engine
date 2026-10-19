@@ -237,6 +237,54 @@ def time_figure(fu_total, overhead, upper):
     plt.close(fig)
 
 
+def summary_figure(f, noise_mm, fu_total, overhead, upper):
+    """Page-1 figure for the short report: finding, quality, time, side by side."""
+    v = pd.read_csv(HERE / "halo_variants_found52.csv")
+    err = v["scaled_dL"].sort_values().to_numpy()
+    found = int((f.found == True).sum()); n = len(f)
+    fig, axes = plt.subplots(1, 3, figsize=(12, 3.3), gridspec_kw={"width_ratios": [1, 1.25, 1.35]})
+    # (a) finding
+    ax = axes[0]
+    ax.barh([0], [found], color=BLUE, height=0.5)
+    ax.barh([0], [n - found], left=[found + 0.6], color=ORANGE, height=0.5)
+    ax.text(found / 2, 0, f"found {found}", ha="center", va="center", color="white", fontweight="bold")
+    ax.text(found + 0.6 + (n - found) / 2, 0.42, f"missed {n - found}", ha="center", va="bottom", fontsize=9, color=INK2)
+    ax.set_xlim(0, n + 2); ax.set_ylim(-0.6, 1.0); ax.set_yticks([]); ax.grid(False)
+    ax.set_xlabel(f"{n} scans, 31 patients (public data)")
+    ax.set_title(f"Finding: {found}/{n} scans ({100*found/n:.0f}%)", loc="left", fontweight="bold", fontsize=10.5)
+    ax.text(0, -0.55, "all misses: central tumours", fontsize=8.5, color=INK2)
+    # (b) quality
+    ax = axes[1]
+    x = np.arange(len(err)); inside = np.abs(err) <= noise_mm
+    ax.axhspan(-noise_mm, noise_mm, color=BAND, zorder=0); ax.axhline(0, color=INK2, lw=0.8)
+    ax.scatter(x[inside], err[inside], s=16, color=BLUE, zorder=3, edgecolor=SURFACE, linewidth=1)
+    ax.scatter(x[~inside], err[~inside], s=16, color=ORANGE, zorder=3, edgecolor=SURFACE, linewidth=1)
+    ax.set_xticks([]); ax.set_ylabel("mm")
+    ax.set_xlabel(f"{len(err)} tumours, 28 patients, sorted")
+    ax.set_title(f"Quality: long axis, AI draft vs expert", loc="left", fontweight="bold", fontsize=10.5)
+    ax.text(1, max(err) * 0.92, f"{inside.sum()}/{len(err)} within the expert's own\nrepeat variation (band, \u00b1{noise_mm:g} mm)",
+            fontsize=8.5, color=INK2, va="top")
+    # (c) time
+    ax = axes[2]
+    if fu_total:
+        lo, hi = fu_total
+        ax.barh(1, lo, 0.45, color=INK2); ax.barh(1, hi - lo, 0.45, left=lo, color=INK2, alpha=0.45)
+        ax.text(hi + 1, 1, f"{lo:.0f}\u2013{hi:.0f} min", va="center", fontsize=9)
+    if overhead and upper:
+        ax.barh(0, overhead["max"], 0.45, color=BLUE)
+        ax.barh(0, upper[1] - overhead["max"], 0.45, left=overhead["max"], color=SURFACE, edgecolor=INK2, hatch="///", linewidth=0.7)
+        ax.text(0, -0.48, f"measured: tool mechanics {overhead['min']:.0f}\u2013{overhead['max']:.0f} min (n={overhead['n']}, developer)",
+                fontsize=8, color=INK, va="center")
+        ax.text(0, -0.8, "hatched: reader's judgement, NOT measured", fontsize=8, color=INK2, va="center")
+    ax.set_yticks([0, 1], ["with the tool\n(estimate)", "Daniel today"])
+    ax.set_xlim(0, 70); ax.set_ylim(-1.0, 1.5); ax.grid(axis="y", visible=False)
+    ax.set_xlabel("minutes per follow-up scan")
+    ax.set_title("Time: one follow-up scan", loc="left", fontweight="bold", fontsize=10.5)
+    fig.tight_layout(w_pad=2.5)
+    fig.savefig(OUT / "summary_at_a_glance.png", dpi=220)
+    plt.close(fig)
+
+
 def main():
     f = pd.read_csv(HERE / "finding_exam_all59.csv")
     m = pd.read_csv(HERE / "finding_exam_matching.csv")
@@ -247,6 +295,7 @@ def main():
     method_figure(found, noise_mm, noise_pct)
     before, overhead, fu_total, upper = time_numbers()
     time_figure(fu_total, overhead, upper)
+    summary_figure(f, noise_mm, fu_total, overhead, upper)
     print(f"before: baseline {before['Baseline']:.0f} min, follow-up {before['Follow-up']:.1f} min, weighted {before['Weighted']:.1f} min")
     if fu_total:
         print(f"follow-up today (Daniel): {fu_total[0]:.0f}-{fu_total[1]:.0f} min; log cross-check {BEFORE['Follow-up']} min")

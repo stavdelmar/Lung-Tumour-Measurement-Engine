@@ -9,7 +9,8 @@ The researcher reviews each one, fixes what's wrong, checks the central areas th
 and exports straight into the lab's Excel master sheet with an edit trail.
 
 - **Live app:** https://lung-marker-scan.base44.app (Google sign-in)
-- **Results (what works, what fails, time saved):** [RESULTS.md](RESULTS.md)
+- **Results, short version (5 pages + appendix):** [results/LungMarker_Results.pdf](results/LungMarker_Results.pdf)
+- **Results, full version:** [RESULTS.md](RESULTS.md)
 - **App code (Base44):** https://github.com/stavdelmar/lungmarker
 - **Demo data (public RIDER images + AI drafts):** `https://lungmarker-demo-data-sd.s3.eu-north-1.amazonaws.com/api/v1` (public, read-only)
 
