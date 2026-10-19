@@ -56,7 +56,7 @@ Before talking to the lab we wrote down five assumptions to check (plan doc, 15 
 | **Researchers want the final say on every tumour.** | Confirmed, and stronger: approving isn't enough, he must be able to **edit** the outline and values himself, and the study record needs to show what he changed. | Full editing tools, a Confirm outline step and an append-only edit trail in the export. |
 | **The tool must run inside the hospital.** | Confirmed: real scans never leave the hospital network. | Built and tested on public data only (RIDER). The engine runs in batch, as it would on a hospital server fed by the image archive. |
 | **Each scan has several tumours.** | Confirmed: 1–3 per scan, anything ≥ 4 mm. | Detection is needed, not just outlining. |
-| *(Not on our list)* The director would want a **progress dashboard**. | Naomi reads the master sheet herself; it is "the single source of truth". | No dashboard. The tool feeds the sheet; the Results view is for checking outlines, not tracking progress. |
+| *(Not on our list)* The director would want a **progress dashboard**. | Naomi reads the master sheet herself; it is "the single source of truth". | The tool feeds the sheet first. The app's Dashboard is for checking results (outlines, edit history, change over time), not for tracking progress. |
 | *(Not on our list)* Scans come in **one by one**, and the AI's misses are an edge case. | Daniel works **patient by patient**, two-thirds of scans are follow-ups, and central tumours (all of the AI's misses) are common for them. | Worklist grouped by patient; time saved weighted by the real scan mix; a required central check before Approve. |
 | *(Not on our list)* "Minutes on scan" = time in our review screen. | It covers his **whole process** (loading to typing into the sheet), without long breaks. | The timer runs from opening to approving and pauses when idle; the export uses active minutes. |
 
@@ -83,10 +83,10 @@ Before talking to the lab we wrote down five assumptions to check (plan doc, 15 
 
 | Path | What it is |
 |---|---|
-| `engine/` | Engine code: `detect.py` (finding + lobes), `measure.py`, `match.py`, `correct.py` (click-to-correct, live mode only), `api.py` (FastAPI), `export_static.py` / `build_demo.py` (static API for the app), `eval_detection.py` + `summarize_exam.py` (the 59-scan exam) |
+| `engine/` | Engine code (`experiments/` = one-off checks behind decisions in RESULTS, e.g. the dropped central flag): `detect.py` (finding + lobes), `measure.py`, `match.py`, `correct.py` (click-to-correct, live mode only), `api.py` (FastAPI), `export_static.py` / `build_demo.py` (static API for the app), `eval_detection.py` + `summarize_exam.py` (the 59-scan exam) |
 | `notebooks/` | Colab notebooks: `nodule_finding_exam.ipynb` (whole pipeline on all 59 scans), `medsam2_vs_our_engine.ipynb` (outline comparison) |
-| `results/` | Raw results CSVs, `make_figures.py`, `figures/` |
-| `demo/` | The static API tree the app reads (also published in the demo-data repo) |
+| `results/` | Raw results CSVs, `make_figures.py`, `figures/`, the short report `LungMarker_Results.pdf` (built by `build_pdf.py` from `report/report.html`) |
+| `demo/` | How the demo data is built and where it lives (Amazon S3, not in this repo) |
 | `space/` | Docker files for a future live engine (not deployed) |
 | `docs/` | Engine API contract |
 
@@ -95,10 +95,13 @@ Before talking to the lab we wrote down five assumptions to check (plan doc, 15 
 ### 1. Use the app (no install)
 Open https://lung-marker-scan.base44.app and sign in with Google (one click). Settings → *Engine base URL* points at the demo data
 (`https://lungmarker-demo-data-sd.s3.eu-north-1.amazonaws.com/api/v1`).
-The Worklist fills itself with the demo scans. Open one, review, approve, then *Results → Export to Excel*.
-A reviewer role is needed to edit (ask the owner); everyone else sees results read-only.
+The Worklist fills itself with the demo scans. Open one, review, approve, then *Dashboard → Reports → Export to Excel*.
+New accounts are read-only viewers. The owner grants the reviewer role (needed to edit and approve) in *Settings → User roles*.
+App code, tests and local setup: see the [app README](https://github.com/stavdelmar/lungmarker#readme).
 
 ### 2. Re-run the AI on the RIDER scans (Colab, free GPU)
+Python 3.10+. `requirements-engine.txt` is the current engine; `requirements.txt` is only for the earlier lungmask version (`engine/classic.py`).
+
 1. Open `notebooks/nodule_finding_exam.ipynb` in Google Colab, runtime **T4 GPU**.
 2. Run all. It downloads RIDER Lung CT and the expert outlines from TCIA's public API, runs the whole pipeline
    (~1 min per scan) and saves `finding_results.zip` (the exam CSVs) and `engine_cache.zip` (the AI drafts).
