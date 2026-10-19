@@ -8,7 +8,7 @@ The AI finds nodules ahead of time and drafts the outline, axes, volume, lobe an
 The researcher reviews each one, fixes what's wrong, checks the central areas the AI misses, approves,
 and exports straight into the lab's Excel master sheet with an edit trail.
 
-- **Live app:** https://lung-marker-scan.base44.app (Google sign-in)
+- **Live app:** https://lung-marker-scan.base44.app. Sign in with Google (one click).
 - **Results, short version (5 pages + appendix):** [results/LungMarker_Results.pdf](results/LungMarker_Results.pdf)
 - **Results, full version:** [RESULTS.md](RESULTS.md)
 - **App code (Base44):** https://github.com/stavdelmar/lungmarker
@@ -93,7 +93,7 @@ Before talking to the lab we wrote down five assumptions to check (plan doc, 15 
 ## How to run
 
 ### 1. Use the app (no install)
-Open https://lung-marker-scan.base44.app, sign in with Google. Settings → *Engine base URL* points at the demo data
+Open https://lung-marker-scan.base44.app and sign in with Google (one click). Settings → *Engine base URL* points at the demo data
 (`https://lungmarker-demo-data-sd.s3.eu-north-1.amazonaws.com/api/v1`).
 The Worklist fills itself with the demo scans. Open one, review, approve, then *Results → Export to Excel*.
 A reviewer role is needed to edit (ask the owner); everyone else sees results read-only.
