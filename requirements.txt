@@ -1,3 +1,5 @@
+# Earlier engine version only (engine/classic.py, lungmask).
+# The current engine uses requirements-engine.txt.
 numpy
 scipy
 pydicom
