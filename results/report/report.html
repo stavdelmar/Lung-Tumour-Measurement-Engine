@@ -40,50 +40,129 @@
 </head>
 <body>
 
+<style>
+  .card.ok { border-left-color: #1baf7a; }
+  .tbd { background: #fff3c4; border: 1px dashed #c98500; padding: 5pt 8pt; border-radius: 3px; }
+</style>
+
 <!-- ============ PAGE 1: SUMMARY ============ -->
 <section class="page">
   <h1>LungMarker: results summary</h1>
   <div class="meta"><span class="ruo">Research use only. Not for clinical use. No clinical claims.</span>
-    AI-assisted finding, measuring and matching of lung nodules on CT, built for the Harbor Thoracic Oncology Lab (simulated). Tested on public data (RIDER Lung CT); not yet on the lab's own scans. Status 19 Oct 2026. Full version: <code>RESULTS.md</code> in the repository.</div>
+    AI-assisted finding, measuring and matching of lung nodules on CT, built for the Harbor Thoracic Oncology Lab (simulated). Tested on public data (RIDER Lung CT), not yet on the lab's own scans. Status 19 Oct 2026. Full version: <code>RESULTS.md</code> in the repository.</div>
 
   <div class="cards">
-    <div class="card">
-      <div class="k">1 · Time</div>
-      <div class="t">Estimate: the tool's own mechanics take about 1–2 minutes per scan; the reader's judgement time with the tool is not measured yet, so the time saved is still a range.</div>
+    <div class="card ok">
+      <div class="k">1 · What works</div>
+      <div class="t">The AI finds most tumours, matches them across scans and drafts measurements close to the expert's on average; the review, edit trail and export to the lab's sheet work end to end.</div>
       <ul>
-        <li>Today, by Daniel's own account, a follow-up scan takes <b>40–55 min</b> by hand (two-thirds of incoming scans are follow-ups).</li>
-        <li>Developer pilot, 7 scans: opening, confirming, editing, matching and export took <b>1–2 active min</b>. That is overhead, not reading time.</li>
-        <li>With the tool, a follow-up takes that overhead plus Daniel's checking of each AI draft: somewhere between a few minutes and close to today's time. Whether the lab's target (about half) is met can't be shown yet.</li>
-      </ul>
-    </div>
-    <div class="card">
-      <div class="k">2 · Quality</div>
-      <div class="t">On 52 tumours from 28 patients, the AI's first draft is close to the expert on average but not as precise per tumour, so every value is checked and confirmed before it is recorded.</div>
-      <ul>
-        <li>Expert-marked tumour found in <b>52 of 59 scans (88%)</b>; matched to the earlier scan in <b>24 of 24</b> pairs.</li>
-        <li>Long axis: median error <b>3.0 mm</b>, no systematic bias; <b>20 of 52</b> within the expert's own scan-to-scan variation (2.3 mm). Volume: median error 14%; 27 of 52 within 17%.</li>
+        <li>Expert-marked tumour found in <b>52 of 59 scans (88%)</b>, with no hint; matched to the earlier scan in <b>24 of 24</b> pairs.</li>
+        <li>Long axis: median error <b>3.0 mm</b>, no systematic bias (52 tumours, 28 patients). Every value is checked and confirmed by the reviewer before it is recorded.</li>
+        <li>The tool's own mechanics (opening, confirming, editing, matching, export) take about <b>1–2 minutes per scan</b> (developer pilot, 7 scans).</li>
       </ul>
     </div>
     <div class="card warn">
-      <div class="k">3 · Failures</div>
-      <div class="t">The AI misses some central tumours and draws some outlines far off; the app makes the reviewer catch these, and some cases are untested.</div>
+      <div class="k">2 · What fails</div>
+      <div class="t">The AI misses central tumours and draws some outlines far off; the app makes the reviewer catch these, and the fix for central tumours needs more compute and more test scans.</div>
       <ul>
-        <li>All 7 misses (4 of 31 patients) are central tumours touching the hilum or mediastinum, so the reviewer must check those areas before approving.</li>
+        <li>All 7 misses (4 of 31 patients) are central tumours touching the hilum or mediastinum; the reviewer must check those areas before approving.</li>
         <li>19 of 52 long axes are more than 5 mm off the expert. Not tested yet: faint ground-glass nodules, false alarms, the lab's own scans.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="k">3 · How we measured the time saved</div>
+      <div class="t">An estimate: the lab's users are simulated, so no real user could time themselves with the tool. We combined Daniel's step-by-step account of his manual review with the developer's timed runs, so the time saved is a range, not a number yet.</div>
+      <ul>
+        <li>Today, by Daniel's own account, a follow-up scan takes <b>40–55 min</b> by hand.</li>
+        <li>With the tool: 1–2 min of mechanics plus Daniel's checking of each AI draft, which we could not measure. So between a few minutes and close to today's time; whether the lab's target (about half) is met can't be shown yet.</li>
       </ul>
     </div>
   </div>
 
   <figure>
     <img src="../figures/summary_at_a_glance.png" alt="Finding, quality and time at a glance">
-    <figcaption>Left: tumours found out of 59 scans. Middle: each dot is one tumour's long-axis error against the expert; the blue band is the expert's own variation between two scans of the same patient. Right: one follow-up scan today, and with the tool, where only the tool's mechanics are measured (blue) and the reader's judgement time is not (hatched). All on public data; research use only.</figcaption>
+    <figcaption>Left: tumours found out of 59 scans. Middle: each dot is one tumour's long-axis error against the expert; the blue band is the expert's own variation between two scans of the same patient. Right: one follow-up scan today, and with the tool, where only the tool's mechanics are measured (blue) and the reader's judgement time is not (hatched). Public data; research use only.</figcaption>
   </figure>
 </section>
 
-<!-- ============ PAGE 2: TIME ============ -->
+<!-- ============ PAGE 2: WHAT WORKS ============ -->
 <section class="page">
-  <h2>How time was measured</h2>
-  <p><b>Why an estimate.</b> The real test is Daniel timing his own work with and without the tool on the lab's scans. That isn't possible yet: the scans never leave the hospital and the tool runs on public data. So, as agreed with Base44's FDE lead (Sam, 18 Oct), we combine <b>Daniel's step-by-step account of his manual review</b> with <b>the developer's timed runs in the tool</b>, and label everything as an estimate.</p>
+  <h2>1 · What works</h2>
+  <p><b>Test set.</b> RIDER Lung CT (public): 31 patients scanned twice, 15 minutes apart; 59 scans with an expert outline of one tumour each. The pipeline ran with no hint. Every measurement is taken the way Daniel takes it (long axis on the slice where the tumour is largest, short axis at right angles, volume from the outline), on the AI's outline and on the expert's.</p>
+  <table>
+    <tr><th style="width:36%">What was compared</th><th style="width:22%">Sample</th><th>Result</th></tr>
+    <tr><td>Finding: expert tumour found, no hint</td><td>59 scans, 31 patients</td><td><b>52 / 59 (88%)</b></td></tr>
+    <tr><td>Long axis: AI draft vs expert</td><td>52 tumours, 28 patients</td><td>median error <b>3.0 mm</b> (bias −0.3 mm); <b>20 / 52</b> within 2.3 mm</td></tr>
+    <tr><td>Volume: AI draft vs expert</td><td>52 tumours, 28 patients</td><td>median error <b>14%</b> (bias +0.5%); <b>27 / 52</b> within 17%</td></tr>
+    <tr><td>Matching to the earlier scan</td><td>24 patient pairs</td><td><b>24 / 24</b> correct</td></tr>
+    <tr><td>Lobe</td><td>52 tumours</td><td>52 / 52 agree with the expert outline</td></tr>
+    <tr><td>Small nodules (&lt; 8 mm), same nodule on both scans</td><td>84 pairs, 22 patients</td><td>diameter differs by a median 0.5 mm (volume ~30%: see What fails)</td></tr>
+  </table>
+  <p class="note"><b>Yardstick:</b> the expert's own variation between the two scans of the same patient (median 2.3 mm long axis, 17% volume; 28 patients). No systematic bias, but individual tumours vary more than that, which is why every outline is confirmed by the reviewer.</p>
+  <figure><img src="../figures/outline_error_vs_expert.png" alt="Long axis and volume error vs expert"></figure>
+
+  <h3>The workflow around the AI</h3>
+  <ul class="tight">
+    <li><b>Review and correction:</b> accept or reject each AI mark, edit outlines (points, Erase, Draw), add missed nodules; volume is recorded only after the reviewer confirms the outline.</li>
+    <li><b>Edit trail and export:</b> one-click Excel export in the lab's exact 18-column format, with an edit trail (AI draft, final value, who, when). Checked on real exports and by 30 automated checks.</li>
+    <li><b>Follow-ups:</b> worklist grouped by patient, the earlier scan already linked, the AI's match shown as a suggestion side by side.</li>
+  </ul>
+</section>
+
+<!-- ============ PAGE 3: WHAT FAILS ============ -->
+<section class="page">
+  <h2>2 · What fails, and how I would fix it</h2>
+  <table>
+    <tr><th style="width:26%">Failure</th><th style="width:22%">How often</th><th>What the app does now</th></tr>
+    <tr><td><b>Central tumours missed</b> (touching the hilum or mediastinum), even large ones, 14–52 mm</td><td>7 / 59 scans, 4 / 31 patients; all of the AI's misses</td><td>Approve stays blocked until the reviewer ticks "I checked the hilum and mediastinum" (one click to the mediastinal window; quick Add nodule). An automatic "check here" flag was tried and dropped: it caught 4 of the 7 but flagged 49 of the other 52 scans.</td></tr>
+    <tr><td><b>Outline far off:</b> long axis more than 5 mm from the expert</td><td>19 / 52 tumours (14 patients): 13 too small, 6 too large</td><td>Nothing is recorded until the reviewer confirms the outline. The 4 small faint tumours drawn much too small show "AI unsure about the edges"; the 9 large ones are not flagged.</td></tr>
+    <tr><td><b>Small-nodule volume is approximate</b></td><td>~30% between repeat scans, nodules &lt; 8 mm (84 pairs)</td><td>Diameters are the reliable number for small nodules; volume only after the reviewer confirms the outline.</td></tr>
+    <tr><td><b>Not tested</b></td><td>—</td><td>Faint ground-glass nodules (none in this data; Daniel's hardest cases); false alarms (only a proxy: 82% of AI marks reappear on the repeat scan); the lab's own scans.</td></tr>
+  </table>
+
+  <h3>How I would fix the central-tumour miss</h3>
+  <p>Why it is hard: three of the four missed tumours lie inside the lung and grow along vessels, so no simple rule separates them from normal vessels near the hilum. The model itself gives them almost zero probability, so this needs a different model, not a setting.</p>
+  <ul class="tight">
+    <li><b>A stronger computer with a GPU.</b> Everything here ran on free tools (a free Colab GPU, no paid compute). A machine with a GPU, or paid cloud GPU hours, would let us run a <b>second model trained on lung-cancer outlines</b> (for example the public Medical Segmentation Decathlon lung-tumour task, which includes central tumours) and use it only where it disagrees with the nodule model.</li>
+    <li><b>A bigger test.</b> The test has only 4 patients with central tumours, too few to judge any fix. Next: test on a larger set with central tumours (public sets first, then a sample of the lab's own scans in a hospital pilot) and count misses and false flags, as we did for the dropped flag.</li>
+    <li><b>A paid model, with care.</b> Commercial nodule-detection software exists, but we have not evaluated any, and cost is exactly why the lab dropped last year's tool. Worth considering only if a test on central tumours shows it catches them and its yearly cost fits a research budget.</li>
+    <li><b>Until then</b> the required manual central check stays.</li>
+  </ul>
+
+  <h3>Other fixes</h3>
+  <ul class="tight">
+    <li><b>Outlines and small nodules:</b> test and tune on radiologist outlines of small and ground-glass nodules (public LNDb set: 27 ground-glass + 46 part-solid nodules ≥ 4 mm).</li>
+    <li><b>Follow-up view:</b> export the lung alignment from the engine, so matching checks and the side-by-side view use it.</li>
+  </ul>
+  <p class="note"><b>Limits of this test:</b> public practice data (mostly large, solid tumours, 13–93 mm; the lab measures from 4 mm); we measured the AI's first draft, not the reviewer's confirmed values; outline settings were compared on the same 52 tumours, so the numbers are somewhat optimistic; the RIDER follow-up is a same-day repeat scan, so it tests matching, not growth.</p>
+</section>
+
+<!-- ============ PAGE 4: HOW WE MEASURED ============ -->
+<section class="page">
+  <h2>3 · How we measured the time saved</h2>
+
+  <h3>The limitation</h3>
+  <p>The lab's users (Naomi and Daniel) are simulated Slack personas. They answer questions, but they can't open the tool, use it on their scans or be timed. So a real usability test and a real before/after timing with the user were not possible, and everything below is an estimate.</p>
+
+  <div class="two">
+    <div>
+      <h3 style="margin-top:4pt">What I would do with real users</h3>
+      <ul class="tight">
+        <li><b>Usability test with Daniel:</b> give a scenario, not instructions ("a follow-up for patient X came in, record it as you would for the study"), watch without helping, ask him to think aloud, then debrief; rate problems by severity and effort.</li>
+        <li><b>Timed reviews:</b> Daniel times his own work on a set of the lab's scans, with and without the tool, baseline and follow-up, using the same definition of time.</li>
+        <li><b>Quality of his final values:</b> compare his confirmed values with his manual ones on the same scans.</li>
+      </ul>
+    </div>
+    <div>
+      <h3 style="margin-top:4pt">What we did instead</h3>
+      <ul class="tight">
+        <li><b>Daniel's step-by-step account</b> of his manual review, in his own words (table below).</li>
+        <li><b>The developer's timed runs</b> through the whole flow in the live app (7 scans): the tool's overhead.</li>
+        <li><b>Feedback from a potential user:</b> I asked a doctor friend to try the tool as a potential user (below).</li>
+        <li>The method was agreed with Base44's FDE lead (Sam, 18 Oct); everything is labelled as an estimate.</li>
+      </ul>
+    </div>
+  </div>
 
   <table>
     <tr><th style="width:17%">Step (follow-up scan)</th><th style="width:17%">Daniel today</th><th>What the tool does</th><th style="width:13%">Effect</th><th style="width:19%">Left with the tool</th></tr>
@@ -97,82 +176,34 @@
     <tr><th>Total</th><th>40–55 min</th><th colspan="2"></th><th>Overhead 1–2 min + judgement (not measured)</th></tr>
   </table>
   <p class="note">Daniel's steps are in his own words (Slack, 18 Oct). Some are per nodule, so the total is his own figure, not our sum; his log (one follow-up, 55 min) agrees within 14%. A baseline scan takes about 39 min (log, 4 scans).</p>
+</section>
 
-  <figure>
+<!-- ============ PAGE 5: TIME RESULT + NEXT STEPS ============ -->
+<section class="page">
+  <figure style="margin-top:0">
     <img src="../figures/time_before_after.png" alt="Follow-up time range chart">
     <figcaption>Developer pilot: 7 scans (4 patients, baseline and follow-up), 1 more excluded (left open while doing something else), 2–5 nodules each, active minutes from the app's timer, rounded to whole minutes. Every run is listed in the appendix.</figcaption>
   </figure>
+  <div class="box"><b>How to read the range.</b> Low end: the mechanics alone (~2 min), not a realistic reading time. High end: today's time minus recording (~35–52 min), as if checking each AI draft took as long as doing the step by hand; the new steps could push it higher. We report no single "with the tool" figure and no percentage saved, because these data can't support one. What the pilot does show is that the tool's mechanics are not where the time goes; how fast a trained reader can check the AI's drafts is the open question.</div>
 
-  <div class="box"><b>How to read the range.</b> Low end: the mechanics alone (~2 min), not a realistic reading time. High end: today's time minus recording (~35–52 min), as if checking each AI draft took as long as doing the step by hand; the new steps could push it higher. We report no single "with the tool" figure and no percentage saved: these data can't support one. Main caveats: the developer is not a trained reader, and the public scans have larger, clearer tumours than the lab's.</div>
-</section>
+  <h3>Feedback from a potential user</h3>
+  <div class="tbd">[TO FILL IN — doctor friend's review: her role/specialty, what she did with the tool (which scans, how long), and what she said: what was clear, where she hesitated, what she would change. Note that she is a friend, not a member of the lab.]</div>
 
-<!-- ============ PAGE 3: QUALITY ============ -->
-<section class="page">
-  <h2>Quality against the expert</h2>
-  <p><b>Test set.</b> RIDER Lung CT (public): 31 patients scanned twice, 15 minutes apart; 59 scans with an expert outline of one tumour each. The pipeline ran with no hint. Every measurement is taken the way Daniel takes it (long axis on the slice where the tumour is largest, short axis at right angles, volume from the outline), on the AI's outline and on the expert's.</p>
-
-  <table>
-    <tr><th style="width:36%">What was compared</th><th style="width:22%">Sample</th><th>Result</th></tr>
-    <tr><td>Finding: expert tumour found, no hint</td><td>59 scans, 31 patients</td><td><b>52 / 59 (88%)</b></td></tr>
-    <tr><td>Long axis: AI draft vs expert</td><td>52 tumours, 28 patients</td><td>median error <b>3.0 mm</b> (bias −0.3 mm); <b>20 / 52</b> within 2.3 mm</td></tr>
-    <tr><td>Volume: AI draft vs expert</td><td>52 tumours, 28 patients</td><td>median error <b>14%</b> (bias +0.5%); <b>27 / 52</b> within 17%</td></tr>
-    <tr><td>Matching to the earlier scan</td><td>24 patient pairs</td><td><b>24 / 24</b> correct</td></tr>
-    <tr><td>Lobe</td><td>52 tumours</td><td>52 / 52 agree with the expert outline</td></tr>
-    <tr><td>Small nodules (&lt; 8 mm), same nodule on both scans (no expert outline)</td><td>84 pairs, 22 patients</td><td>diameter differs by a median 0.5 mm; volume by ~30%</td></tr>
-  </table>
-  <p class="note"><b>Yardstick:</b> the expert's own variation between the two scans of the same patient (median 2.3 mm long axis, 17% volume; 28 patients).</p>
-
-  <figure>
-    <img src="../figures/outline_error_vs_expert.png" alt="Long axis and volume error vs expert">
-  </figure>
-
+  <h2 style="margin-top:14pt">Next steps</h2>
   <ul class="tight">
-    <li><b>What this measures:</b> the AI's first draft. What goes into the lab's sheet is the reviewer's confirmed value, which was not measured here; the edit trail records every change, so it can be measured in real use.</li>
-    <li><b>The test tumours are large</b> (13–93 mm, median 43 mm); the lab measures from 4 mm, so small-nodule accuracy is not established.</li>
-    <li><b>Somewhat optimistic:</b> the outline settings were compared on these same 52 tumours.</li>
-  </ul>
-</section>
-
-<!-- ============ PAGE 4: FAILURES + LIMITS ============ -->
-<section class="page">
-  <h2>Failure cases</h2>
-  <table>
-    <tr><th style="width:27%">Failure</th><th style="width:24%">How often</th><th>What the app does about it</th></tr>
-    <tr><td><b>Central tumours missed</b> (touching the hilum or mediastinum), even large ones, 14–52 mm</td><td>7 / 59 scans, 4 / 31 patients; all of the AI's misses</td><td>Approve stays blocked until the reviewer ticks "I checked the hilum and mediastinum" (one click to the mediastinal window; quick Add nodule). An automatic "check here" flag was tried and dropped: it caught 4 of the 7 but flagged 49 of the other 52 scans.</td></tr>
-    <tr><td><b>Outline far off:</b> long axis more than 5 mm from the expert</td><td>19 / 52 tumours (14 patients): 13 too small, 6 too large</td><td>Nothing is recorded until the reviewer confirms the outline; Erase, Draw and point editing fix it. The 4 small faint tumours drawn much too small now show "AI unsure about the edges"; the 9 large ones are not flagged.</td></tr>
-    <tr><td><b>Small-nodule volume is approximate</b></td><td>~30% between repeat scans for nodules &lt; 8 mm (84 pairs)</td><td>Diameters are the reliable number for small nodules; volume is recorded only after the reviewer confirms the outline.</td></tr>
-    <tr><td><b>Wrong follow-up match</b> (would also misalign the side-by-side view)</td><td>Not seen (24 / 24 correct), but possible</td><td>The match is a suggestion the reviewer picks; a warning flags a different lobe, a size change over 50%, or disagreement with the alignment.</td></tr>
-  </table>
-
-  <h2 style="margin-top:14pt">Limits</h2>
-  <ul class="tight">
-    <li><b>Not tested:</b> faint ground-glass nodules (none in the test data; Daniel's hardest cases), false alarms (the data marks one tumour per scan; only a proxy: 82% of AI marks reappear on the repeat scan), and the lab's own scans.</li>
-    <li><b>Public practice data:</b> mostly large, solid tumours; the lab's cohort may differ.</li>
-    <li><b>First draft only:</b> we measured the AI's draft, not the reviewer's confirmed values.</li>
-    <li><b>Same tumours for tuning and testing:</b> outline settings were compared on the 52 test tumours, so quality numbers are somewhat optimistic.</li>
-    <li><b>Follow-up = same-day repeat scan:</b> tests matching, not growth.</li>
-    <li><b>Timing is an estimate:</b> small samples (7 runs, a handful of log rows), a developer rather than a reader, and the reader's judgement time not measured.</li>
-  </ul>
-</section>
-
-<!-- ============ PAGE 5: NEXT STEPS + LAST YEAR ============ -->
-<section class="page">
-  <h2>Next steps</h2>
-  <ul class="tight">
-    <li><b>Measure the reader's judgement time:</b> Daniel times his own reviews with and without the tool on a small set of the lab's scans, in a hospital pilot with the engine on one hospital server. This is the only way to turn the timing range into a number, and it also measures the quality of his confirmed values.</li>
-    <li><b>Ground-glass test</b> on the public LNDb set (27 ground-glass + 46 part-solid nodules ≥ 4 mm).</li>
-    <li><b>Central tumours:</b> try a second model trained on lung-cancer outlines; keep the manual central check until a test shows it works.</li>
-    <li><b>Follow-up view:</b> export the lung alignment from the engine, so matching checks and the side-by-side view use it.</li>
-    <li><b>Cost for a research budget</b> (last year's tool failed on price): write down the full yearly cost before any rollout, namely the Base44 plan, one hospital server (an existing machine if it has a GPU or at least 8 GB of memory) and the IT hours, so the lab can compare it with last year's tool. No licence or per-scan fees for the AI models.</li>
+    <li><b>Real timing and usability test:</b> Daniel times his own reviews with and without the tool on a small set of the lab's scans, in a hospital pilot with the engine on one hospital server, plus a moderated usability session. This turns the timing range into a number.</li>
+    <li><b>Central tumours:</b> a second model on a GPU and a bigger test set (page 3); manual central check until then.</li>
+    <li><b>Ground-glass test</b> on the public LNDb set.</li>
+    <li><b>Cost for a research budget:</b> write down the yearly cost before any rollout (Base44 plan, one hospital server, IT hours, and any paid GPU or model), so the lab can compare it with last year's tool.</li>
   </ul>
 
-  <h2 style="margin-top:14pt">Why this differs from last year's tool</h2>
+  <h2 style="margin-top:12pt">Why this differs from last year's tool</h2>
   <table>
-    <tr><th style="width:21%">Why it failed</th><th>What LungMarker does</th><th style="width:34%">Honest caveat</th></tr>
-    <tr><td><b>Accept / reject only</b>, no editing of outlines</td><td>The reviewer edits the outline directly (points, Erase, Draw); volume only after Confirm outline; every change kept in an edit trail (AI draft, final value, who, when).</td><td>Tested by us, not yet by Daniel on his own scans.</td></tr>
-    <tr><td><b>No export to their sheet</b></td><td>One-click Excel export in the lab's exact 18-column format, plus the edit trail. The sheet stays the single source of truth.</td><td>Checked on real exports and 30 automated checks, on public scans.</td></tr>
-    <tr><td><b>Needed hospital IT to install</b></td><td>Runs in the browser; nothing installed on anyone's computer.</td><td>Some IT remains: the AI engine must run on one hospital server (batch, from the image archive), plus a data-governance review of what the cloud app stores (study IDs, measurements, edit trail; no images).</td></tr>
-    <tr><td><b>Too expensive</b></td><td>Open-source AI models (no licence or per-scan fees) on a low-cost app platform.</td><td>Yearly cost not yet written down (next step).</td></tr>
+    <tr><th style="width:21%">Why it failed</th><th>What LungMarker does</th><th style="width:36%">Honest caveat</th></tr>
+    <tr><td><b>Accept / reject only</b></td><td>Edit the outline directly; volume only after Confirm; full edit trail.</td><td>Not yet tested by Daniel on his own scans.</td></tr>
+    <tr><td><b>No export to their sheet</b></td><td>One-click export in the exact 18-column format, plus the edit trail.</td><td>Checked on public scans.</td></tr>
+    <tr><td><b>Needed hospital IT to install</b></td><td>Runs in the browser; nothing installed on anyone's computer.</td><td>The AI engine still needs one hospital server, plus a data-governance review.</td></tr>
+    <tr><td><b>Too expensive</b></td><td>Open-source AI models, no licence or per-scan fees; low-cost app platform.</td><td>Yearly cost not yet written down (next step).</td></tr>
   </table>
 </section>
 
