@@ -41,213 +41,148 @@
 <body>
 
 <style>
-  .tbd { background: #fff3c4; border: 1px dashed #c98500; padding: 5pt 8pt; border-radius: 3px; }
-  .sec { display: flex; align-items: center; gap: 6pt; font-size: 11.5pt; font-weight: 700; margin: 10pt 0 3pt; }
+  .sec { display: flex; align-items: center; gap: 6pt; font-size: 11.5pt; font-weight: 700; margin: 9pt 0 4pt; }
   .dot { width: 10pt; height: 10pt; border-radius: 50%; display: inline-block; }
   .g { background: #1baf7a; } .o { background: #eb6834; } .b { background: #2a78d6; }
-  .lead { font-size: 9.6pt; margin: 0 0 6pt; }
-  .tiles { display: grid; gap: 6pt; margin-bottom: 4pt; }
-  .t3 { grid-template-columns: repeat(3, 1fr); } .t2 { grid-template-columns: repeat(2, 1fr); } .t4 { grid-template-columns: repeat(4, 1fr); }
+  .tiles { display: grid; gap: 6pt; grid-template-columns: repeat(3, 1fr); margin-bottom: 4pt; }
   .tile { border: 1px solid var(--rule); border-top: 3px solid #1baf7a; border-radius: 4px; padding: 6pt 8pt 7pt; background: #fbfdfc; }
   .tile.bad { border-top-color: #eb6834; background: #fffaf7; }
-  .tile.info { border-top-color: #2a78d6; background: #f8fbff; }
-  .tile .big { font-size: 15pt; font-weight: 800; line-height: 1.1; letter-spacing: -0.3pt; }
-  .tile .lbl { font-size: 8.4pt; color: var(--ink); margin-top: 2pt; line-height: 1.32; }
-  .tile .sub { font-size: 7.6pt; color: var(--ink2); margin-top: 3pt; }
-  .flow { display: flex; align-items: stretch; gap: 0; margin: 4pt 0 6pt; }
-  .fbox { flex: 1; border: 1px solid var(--rule); border-radius: 4px; padding: 6pt 8pt; background: #f8fbff; font-size: 8.4pt; line-height: 1.32; }
-  .fbox b.h { display: block; font-size: 8.8pt; margin-bottom: 2pt; }
-  .fbox.res { background: #eef4fc; border-color: #9ec5f4; }
-  .fbox.gap { background: #fff; border-style: dashed; }
-  .arr { align-self: center; font-size: 14pt; color: var(--ink2); padding: 0 4pt; }
-  .pipe .fbox { background: #fbfdfc; }
+  .tile .big { font-size: 14pt; font-weight: 800; line-height: 1.1; }
+  .tile .lbl { font-size: 8.5pt; margin-top: 3pt; line-height: 1.33; }
+  .tile .n { font-size: 7.6pt; color: var(--ink2); margin-top: 3pt; }
+  .formula { border: 1px solid #9ec5f4; background: #eef4fc; border-radius: 4px; padding: 7pt 10pt; margin: 4pt 0 8pt; }
+  .formula .eq { font-size: 11pt; font-weight: 700; margin: 2pt 0 4pt; }
   .small { font-size: 8pt; color: var(--ink2); }
   h2 .dot { margin-right: 5pt; vertical-align: 1pt; }
+  .page.main h2 { margin-top: 0; }
+  .appx table { break-inside: avoid; }
+  .runs td:first-child { white-space: nowrap; }
+  .appx h2 { margin-top: 10pt; }
+  .page.main table { font-size: 7.9pt; }
+  .page.main th, .page.main td { padding: 2pt 5pt; }
+  td.e { white-space: nowrap; }
 </style>
 
-<!-- ============ PAGE 1: SUMMARY ============ -->
-<section class="page">
-  <h1>LungMarker: results summary</h1>
+<!-- ============ PAGE 1: WHAT WORKS / WHAT FAILS ============ -->
+<section class="page main">
+  <h1>LungMarker: results</h1>
   <div class="meta"><span class="ruo">Research use only. Not for clinical use. No clinical claims.</span>
-    LungMarker helps a researcher measure lung tumours on CT scans faster. An AI finds the tumours and drafts the measurements; the researcher checks and corrects each one, and the results go straight into the lab's Excel sheet. Built in 7 days for the Harbor Thoracic Oncology Lab (simulated), tested on a public set of CT scans. 19 Oct 2026.</div>
+    LungMarker helps a researcher measure lung tumours on CT scans faster. An AI finds the tumours and drafts the measurements; the researcher checks and corrects each one, and the results go straight into the lab's Excel sheet, their one source of truth. Built for the Harbor Thoracic Oncology Lab (simulated) and tested on a public set of CT scans: 59 scans from 31 patients, each with one tumour outlined by an expert (RIDER Lung CT).</div>
 
-  <div class="sec"><span class="dot g"></span>What worked</div>
-  <div class="tiles t3">
-    <div class="tile"><div class="big" style="font-size:12pt">Asking first changed the product</div><div class="lbl">We assumed drawing outlines was the slow part. Daniel showed us it's <b>searching</b> for tumours. So we built "find" first, which saves the most time.</div></div>
-    <div class="tile"><div class="big">52 / 59 · 24 / 24</div><div class="lbl">tumours found, and tumours matched to the earlier scan. Measurements are typically <b>3.0 mm</b> from the expert's; two expert measurements of the same tumour differ by 2.3 mm.</div></div>
-    <div class="tile"><div class="big" style="font-size:12pt">Fits how the lab works</div><div class="lbl">Scans grouped by patient, export straight into their 18-column Excel sheet, a record of every change. It answers why last year's tool failed: no editing, no export, installation, cost.</div></div>
-    <div class="tile"><div class="big" style="font-size:12pt">Works end to end in the browser</div><div class="lbl">The Base44 app and the AI engine we built are connected; the original CT scans (DICOM) open and scroll in the browser. Nothing to install.</div></div>
-    <div class="tile"><div class="big" style="font-size:12pt">Honesty built into the tool</div><div class="lbl">A required check of the centre of the chest, an "AI unsure" label, and "Not found" rows so a tumour from the earlier scan is never silently dropped.</div></div>
-    <div class="tile"><div class="big" style="font-size:12pt">Fast, with checks on real output</div><div class="lbl">First milestone reached a day early. Checking real Excel exports caught data bugs (a nodule that disappeared, rejections missing from the record) before they reached the lab.</div></div>
+  <div class="sec"><span class="dot g"></span>What works</div>
+  <div class="tiles">
+    <div class="tile"><div class="big">52 of 59 found</div><div class="lbl">The AI found the tumour the expert had marked in 52 of 59 scans (88%), with no hints.</div><div class="n">59 scans, 31 patients</div></div>
+    <div class="tile"><div class="big">24 of 24 matched</div><div class="lbl">Every tumour found on both of a patient's scans was correctly matched to the earlier scan.</div><div class="n">24 patient pairs</div></div>
+    <div class="tile"><div class="big">3.0 mm vs 2.3 mm</div><div class="lbl">The AI's measurement of a tumour's longest width is typically 3.0 mm from the expert's; two expert measurements of the same tumour differ by 2.3 mm. No tendency to over- or under-measure.</div><div class="n">52 tumours, 28 patients (expert: 28 patients)</div></div>
   </div>
 
-  <div class="sec"><span class="dot o"></span>What didn't work, or isn't proven yet</div>
-  <div class="tiles t2">
-    <div class="tile bad"><div class="big" style="font-size:12pt">Real time saved: not measured</div><div class="lbl">The lab's user is simulated and can't use the tool. We timed only the tool's own steps (~1–2 min per scan), so time saved is a range, not a number.</div></div>
-    <div class="tile bad"><div class="big" style="font-size:12pt">Central tumours: 7 of 59 missed</div><div class="lbl">All misses were in the centre of the chest. The fix for now is a required manual check; an automatic warning gave too many false alarms.</div></div>
-    <div class="tile bad"><div class="big" style="font-size:12pt">Faint "ground-glass" nodules: not tested</div><div class="lbl">None in the practice scans. The open dataset that has them (LNDb) needs registration and approval, up to 9 days, after the deadline. We chose not to use it before approval.</div></div>
-    <div class="tile bad"><div class="big" style="font-size:12pt">Outlines: 19 of 52 off by &gt; 5 mm</div><div class="lbl">The researcher confirms every one, but some large ones get no "unsure" warning.</div></div>
-    <div class="tile bad"><div class="big" style="font-size:12pt">Usability testing was limited</div><div class="lbl">Daniel can't open links, so we used screenshots and one external tester.</div></div>
-    <div class="tile bad"><div class="big" style="font-size:12pt">Base44: strong at structure, weak at fine UI</div><div class="lbl">The builder set up the app well, but detailed screen work and the sync → Publish order slowed testing, so much of the work moved to code.</div></div>
+  <div class="sec"><span class="dot o"></span>What fails, or isn't proven yet</div>
+  <div class="tiles">
+    <div class="tile bad"><div class="big">7 misses, all central</div><div class="lbl">All 7 missed tumours were in the centre of the chest, next to the heart and main airways (14–52 mm). The app now requires the researcher to check that area before approving; an automatic warning was tried and dropped (too many false alarms).</div><div class="n">7 of 59 scans, 4 of 31 patients</div></div>
+    <div class="tile bad"><div class="big">19 of 52 off by &gt; 5 mm</div><div class="lbl">AI outlines more than 5 mm from the expert's (13 too small, 6 too large). The researcher confirms every outline before it's saved, but some large misses get no "AI unsure" warning.</div><div class="n">52 tumours, 28 patients</div></div>
+    <div class="tile bad"><div class="big">Not tested</div><div class="lbl">Faint "ground-glass" nodules: none in the test scans, and the open set that has them (LNDb) needs approval that takes up to 9 days, ending after the deadline. False alarms: the data marks only one tumour per scan. The lab's own scans.</div><div class="n">0 ground-glass nodules in the 59 test scans</div></div>
   </div>
-  <div class="tiles" style="grid-template-columns:1fr; margin-top:6pt">
-    <div class="tile bad"><div class="big" style="font-size:12pt">Not a real deployment yet</div><div class="lbl">The AI runs in batches on a free cloud GPU (Colab). In a hospital it needs one server, a data-privacy review and a written yearly cost.</div></div>
-  </div>
-  <p class="small" style="margin-top:6pt">How the time saved was measured, with all sample sizes: page 4. Full version and raw data: <code>RESULTS.md</code> in the repository.</p>
+
+  <figure>
+    <img src="../figures/outline_error_vs_expert.png" alt="AI vs expert, per tumour">
+    <figcaption>Each dot is one of the 52 tumours found (28 patients): how far the AI's measurement is from the expert's (left: longest width, mm; right: volume, %). Blue band: how much the expert's own two measurements of the same tumour differ (2.3 mm, 17%; 28 patients). Within the band: 20 of 52 for width, 27 of 52 for volume. A good first draft, not a final answer, which is why the researcher confirms every value.</figcaption>
+  </figure>
 </section>
 
-<!-- ============ PAGE 2: WHAT WORKS ============ -->
-<section class="page">
-  <h2><span class="dot g"></span>What works</h2>
+<!-- ============ PAGE 2: HOW TIME SAVED WAS MEASURED ============ -->
+<section class="page main">
+  <h2><span class="dot b"></span>How I measured the time saved</h2>
+  <p>The honest test is the real researcher timing his work with and without the tool. Because the lab's users are simulated, that wasn't possible. Instead I combined what I could collect, agreed the method with Base44's FDE lead (Sam), and labelled every number as an estimate.</p>
 
-  <h3>The pieces connect end to end</h3>
-  <div class="flow pipe">
-    <div class="fbox"><b class="h">1 · CT scans</b>Original scans in the hospital format (DICOM), here from a public research set</div>
-    <div class="arr">→</div>
-    <div class="fbox"><b class="h">2 · Our AI engine</b>Finds tumours, outlines and measures them, matches them to the earlier scan</div>
-    <div class="arr">→</div>
-    <div class="fbox"><b class="h">3 · Results online</b>Scan images and AI drafts saved as files in cloud storage</div>
-    <div class="arr">→</div>
-    <div class="fbox"><b class="h">4 · Base44 app</b>The researcher reviews, corrects and approves, in the browser</div>
-    <div class="arr">→</div>
-    <div class="fbox"><b class="h">5 · Excel</b>One click: rows in the lab's own sheet format, plus a log of every change</div>
-  </div>
-  <p class="small">The app picks up new scans by itself. In real use, step 2 would run on one server inside the hospital, because real scans can't leave it.</p>
-
-  <h3>How close is the AI to an expert?</h3>
-  <p>We ran the AI on a public set of 59 CT scans (31 patients, each scanned twice 15 minutes apart), where an expert had outlined one tumour per scan, and measured both outlines the way Daniel measures.</p>
-  <figure><img src="../figures/outline_error_vs_expert.png" alt="AI vs expert, per tumour"><figcaption>Each dot is one tumour: how far the AI's measurement is from the expert's (left: longest width in mm; right: volume in %). Blue band: how much the expert's own two measurements of the same tumour differ.</figcaption></figure>
-  <ul class="tight">
-    <li><b>Finding:</b> the tumour was found in 52 of 59 scans (88%), and matched to the same patient's other scan in 24 of 24 cases.</li>
-    <li><b>Measuring:</b> the AI's longest-width measurement is typically about 3 mm from the expert's, with no tendency to over- or under-measure (52 tumours, 28 patients). For comparison, the expert's own two measurements of the same tumour differ by about 2.3 mm. The AI is within that range for 20 of 52 tumours, so it's a good first draft, not a final answer.</li>
-    <li><b>Volume:</b> typically 14% from the expert; within the expert's own variation (17%) for 27 of 52.</li>
-  </ul>
-
-  <h3>What the researcher gets</h3>
-  <ul class="tight">
-    <li><b>Excel in the lab's format:</b> the same 18 columns, order and formats as Daniel's sheet; only new rows each day; a second sheet logs what the AI drafted and what he changed. Checked on real exports and by 30 automated checks.</li>
-    <li><b>Review that respects his judgement:</b> accept or reject each AI suggestion, fix outlines by hand, add anything it missed. Nothing is saved until he confirms.</li>
-    <li><b>Organised by patient:</b> a patient's scans are grouped, and the earlier scan opens next to the new one.</li>
-  </ul>
-</section>
-
-<!-- ============ PAGE 3: WHAT DOESN'T WORK ============ -->
-<section class="page">
-  <h2><span class="dot o"></span>What doesn't work (yet), and how I would fix it</h2>
-
-  <div class="tiles t2">
-    <div class="tile bad"><div class="big">Central tumours missed</div><div class="lbl">7 of 59 scans (4 of 31 patients). Every miss was in the centre of the chest, where the lungs meet the heart and main airways, including large tumours (14–52 mm). The lab says these are common in its patients.</div><div class="sub">Now: the app won't let a scan be approved until the researcher confirms they checked that area. An automatic warning was tried and dropped: it flagged almost every scan.</div></div>
-    <div class="tile bad"><div class="big">Some outlines far off</div><div class="lbl">19 of 52 AI outlines were more than 5 mm off the expert's (13 too small, 6 too large).</div><div class="sub">Now: nothing is saved until the researcher confirms the outline; some likely-too-small outlines are flagged "AI unsure about the edges".</div></div>
-    <div class="tile bad"><div class="big">No real usability test</div><div class="lbl">The lab's users are simulated chat personas: they answer questions but can't open links or use the tool. We used screenshots and one external tester instead.</div><div class="sub">Impact: the time saved is an estimate, and ease of use is untested with the real user.</div></div>
-    <div class="tile bad"><div class="big">Not yet tested</div><div class="lbl">Faint "ground-glass" nodules: none in the practice scans; the open set that has them (LNDb) needs approval that takes up to 9 days, after the deadline, and we chose not to use it before approval. Also untested: false alarms (the data marks one tumour per scan), the lab's own scans. Small nodules' volume varies ~30% between repeat scans.</div></div>
-    <div class="tile bad"><div class="big">Base44 limits</div><div class="lbl">The builder was strong at setting up the app's structure and data, weak at fine screen detail; the GitHub sync → Publish order caused confusing test results. Much of the work moved to code.</div></div>
-    <div class="tile bad"><div class="big">Not a real deployment</div><div class="lbl">The AI runs in batches on a free cloud GPU. In a hospital it needs one server inside the network, a data-privacy review and a written yearly cost.</div></div>
+  <div class="formula">
+    <b>Today's time per incoming scan.</b> Two-thirds of the scans Daniel receives are follow-ups, which take longer than first (baseline) scans, so the average is weighted:
+    <div class="eq">Minutes per scan = ⅓ × baseline + ⅔ × follow-up = ⅓ × 39 + ⅔ × 47.5 ≈ 45 min</div>
+    Baseline 39 min: Daniel's log (4 scans). Follow-up 40–55 min, midpoint 47.5: Daniel's own step-by-step account (his log: 55 min, 1 scan; using it gives ≈ 50 min, so we use the lower figure). The lab's target, half: about 22 min per scan.
   </div>
 
-  <h3>How I would fix the central-tumour miss</h3>
-  <p>The AI model itself sees almost nothing at those spots, and three of the four missed tumours grow along blood vessels, so a simple rule can't tell them apart from normal vessels. It needs a different model, not a setting.</p>
-  <ul class="tight">
-    <li><b>A stronger computer with a GPU.</b> Everything ran on free tools this week. With a GPU (or paid cloud GPU time), I would run a second AI model trained on lung-cancer scans that include central tumours, and use it only where it disagrees with the current one.</li>
-    <li><b>A bigger test.</b> We had only 4 patients with central tumours, too few to judge any fix. Next: a larger public set, then a sample of the lab's own scans inside the hospital, counting misses and false alarms.</li>
-    <li><b>A paid model, carefully.</b> Commercial tools exist but weren't evaluated, and price is why the lab dropped last year's tool. Only if a test shows it catches central tumours and the yearly cost fits a research budget.</li>
-    <li><b>Until then,</b> the required manual check of the centre of the chest stays.</li>
-  </ul>
-
-  <h3>How I would run the usability test with real users</h3>
-  <ul class="tight">
-    <li><b>Watch, don't help:</b> give Daniel a real task ("a follow-up scan for patient X came in, record it as you would for the study"), ask him to think aloud, don't explain, then talk it through; rank problems by how serious and how hard to fix.</li>
-    <li><b>Time it properly:</b> Daniel times his own work on a set of the lab's scans, with and without the tool, the same way both times.</li>
-    <li><b>Check the final numbers:</b> compare the values he confirms with the tool against his manual ones on the same scans.</li>
-  </ul>
-  <p class="small"><b>Other limits:</b> the public scans have mostly large, clear tumours (13–93 mm; the lab measures from 4 mm); we measured the AI's first draft, not the researcher's corrected values; settings were tuned on the same tumours, so the numbers are a little optimistic.</p>
-</section>
-
-<!-- ============ PAGE 4: HOW WE MEASURED ============ -->
-<section class="page">
-  <h2><span class="dot b"></span>How we measured the time saved</h2>
-  <p>The honest test is the real researcher timing his work with and without the tool. Because the lab's users are simulated, that wasn't possible. Instead we combined what we could collect, agreed the method with Base44's FDE lead (Sam), and label every number as an estimate.</p>
-
-  <div class="tiles t3">
-    <div class="tile info"><div class="big">40–55 min</div><div class="lbl">one follow-up scan today, by hand: Daniel's own step-by-step account (his log agrees: 55 min)</div></div>
-    <div class="tile info"><div class="big">1–2 min</div><div class="lbl">the tool's own steps: opening, clicking, confirming, exporting. Timed on 7 scans by the developer</div></div>
-    <div class="tile info" style="border-top-style:dashed"><div class="big">? min</div><div class="lbl">Daniel checking each AI suggestion. Not measured: only a real user can show this</div></div>
-  </div>
-
-  <h3>Where the time goes today, and what the tool changes</h3>
+  <h3 style="margin-top:4pt">Where the time goes today (one follow-up scan), and what the tool changes</h3>
   <table>
-    <tr><th style="width:19%">Step (follow-up scan)</th><th style="width:20%">Daniel today</th><th>What the tool does</th><th style="width:14%">Effect</th></tr>
-    <tr><td>Opening the scan</td><td>1–2 min</td><td>Opens with the AI's suggestions ready; earlier scan already linked</td><td>Shorter</td></tr>
-    <tr><td>Finding each old nodule again and matching it</td><td>~10 min per nodule (lines up by airways)</td><td>Suggests the match and shows the two scans side by side; he confirms</td><td>Shorter, still checked</td></tr>
-    <tr><td>Searching for new nodules</td><td>10–20 min (two full passes through 250–400 images)</td><td>AI marks candidates; one check pass, plus the required centre-of-chest check</td><td>Shorter, still checked</td></tr>
-    <tr><td>Measuring</td><td>2–4 min per nodule</td><td>Measurements drafted; he checks or corrects them</td><td>Shorter, still checked</td></tr>
-    <tr><td>Full outline</td><td>15–25 min per tumour, when needed</td><td>Outline drafted for every nodule; he confirms</td><td>Shorter, done for more nodules</td></tr>
-    <tr><td>Typing into Excel</td><td>3–5 min</td><td>One export a day in his format</td><td>Removed</td></tr>
-    <tr><td><i>New</i></td><td>—</td><td>Accept or reject each AI suggestion; tick the centre-of-chest check</td><td>Added</td></tr>
-    <tr><th>Total</th><th>40–55 min</th><th colspan="2">Tool's own steps 1–2 min (measured) + his checking (not measured)</th></tr>
+    <tr><th style="width:21%">Step</th><th style="width:22%">Daniel today (his account)</th><th>What the tool does</th><th style="width:15%">Effect</th></tr>
+    <tr><td>Opening the scan</td><td>1–2 min</td><td>Opens with the AI's suggestions ready; earlier scan already linked</td><td class="e">Shortened</td></tr>
+    <tr><td>Finding each earlier nodule and matching it</td><td>~10 min per nodule</td><td>Suggests the match and shows both scans side by side; he confirms</td><td class="e">Shortened, still checked</td></tr>
+    <tr><td>Searching for new nodules</td><td>10–20 min (two passes, 250–400 images)</td><td>AI marks candidates; one check pass, plus the required centre-of-chest check</td><td class="e">Search shortened; check kept</td></tr>
+    <tr><td>Measuring</td><td>2–4 min per nodule</td><td>Measurements drafted; he checks or corrects them</td><td class="e">Shortened, still checked</td></tr>
+    <tr><td>Full outline</td><td>15–25 min per tumour, when needed</td><td>Outline drafted for every nodule; he confirms</td><td class="e">Shortened</td></tr>
+    <tr><td>Typing into Excel</td><td>3–5 min</td><td>One export a day in his format</td><td class="e">Removed</td></tr>
+    <tr><td><i>New</i></td><td>—</td><td>Accept or reject each AI suggestion; tick the centre-of-chest check</td><td class="e">Added</td></tr>
+    <tr><th>Total</th><th>40–55 min</th><th colspan="2">With the tool: its own steps 1–2 min (measured, 7 scans) + his checking (not measured)</th></tr>
   </table>
 
-  <figure><img src="../figures/time_before_after.png" alt="Follow-up time range chart"></figure>
-  <div class="box"><b>How to read this.</b> The blue bar is all we could measure: the tool's own steps. The hatched part is Daniel's checking time, which only he can show. If checking were instant, a scan would take a few minutes; if it took as long as doing it by hand, about 35–52 min. So we give a range, not a single number or a percentage saved. What it does show: the tool's mechanics are not where the time goes.</div>
-  <p class="small">Daniel's steps are in his own words (18 Oct). Developer runs: 7 scans (4 patients, first scan and follow-up), 1 more excluded because it was left open; every run is in the appendix. A first (baseline) scan takes about 39 min by hand.</p>
+  <figure style="margin:0 auto 2pt; width:84%"><img src="../figures/time_before_after.png" alt="Follow-up time range chart"></figure>
+  <p style="font-size:8.8pt"><b>How to read this.</b> The blue bar is all I could measure: the tool's own steps (opening, accepting, confirming, matching, exporting), 1–2 active minutes per scan over 7 developer runs on public scans (2–5 nodules each; 1 more run excluded, see Annex C). The hatched part is Daniel's time to check each AI suggestion, which only he can show. If checking were instant, a follow-up would take a few minutes; if it took as long as doing it by hand, about 35–52 min. So I give a range for one follow-up (compare it with today's 40–55 min, not the 45-min average), and no single number or percentage saved.</p>
+  <p style="font-size:8.8pt"><b>Limitation and next step.</b> The lab's users are simulated: they answer questions but can't open the tool, so no real reader was timed and no real usability test was possible. Daniel approved the flow from screenshots and one external tester (a doctor) tried the tool. The measurement itself is built in: the app times every scan the way Daniel logs it today (the whole review, without long breaks) and fills his "Minutes on scan" column. <b>Next step:</b> Daniel's own timed reviews, with and without the tool, on a small set of the lab's scans.</p>
 </section>
 
-<!-- ============ PAGE 5: FEEDBACK, NEXT STEPS, LAST YEAR ============ -->
-<section class="page">
-  <h2>Feedback from a potential user</h2>
-  <p>Since the lab's users are simulated, I also asked a doctor friend to try the tool as a potential user.</p>
-  <div class="tbd">[TO FILL IN — her role/specialty, what she did with the tool (which scans, how long), and what she said: what was clear, where she hesitated, what she would change. Note that she is a friend, not a member of the lab.]</div>
-
-  <h2 style="margin-top:14pt">Next steps</h2>
-  <ul class="tight">
-    <li><b>A real test with the real user:</b> inside the hospital, on a small set of the lab's own scans, with the AI engine on one hospital server. Daniel times his work with and without the tool and we run a proper usability session. This turns the time range into a number.</li>
-    <li><b>Central tumours:</b> a second AI model on a GPU, tested on a bigger set; the manual check stays until then.</li>
-    <li><b>Faint nodules:</b> once LNDb access is approved, test on its faint "ground-glass" and part-solid nodules (73 suitable nodules counted).</li>
-    <li><b>Cost:</b> write down the full yearly cost before any rollout (Base44 plan, one hospital server, IT time, any paid GPU or model) so the lab can compare it with last year's tool.</li>
-  </ul>
-
-  <h2 style="margin-top:12pt">Why this differs from last year's tool</h2>
-  <p>The lab tried a vendor tool last year and dropped it. Their four reasons, and what's different:</p>
-  <table>
-    <tr><th style="width:23%">Last year's problem</th><th>LungMarker</th><th style="width:34%">Honest caveat</th></tr>
-    <tr><td><b>Could only accept or reject</b> the AI's outline</td><td>The researcher can edit any outline and value; every change is logged</td><td>Not yet tried by the real researcher</td></tr>
-    <tr><td><b>No export to their sheet</b></td><td>One-click export in their exact Excel format</td><td>Checked on public test scans</td></tr>
-    <tr><td><b>Needed hospital IT to install</b></td><td>Runs in the browser; nothing to install on anyone's computer</td><td>The AI engine still needs one hospital server and a data-privacy review</td></tr>
-    <tr><td><b>Too expensive</b></td><td>Free, open-source AI models; low-cost app platform</td><td>Yearly cost not yet written down</td></tr>
-  </table>
-</section>
-
-<!-- ============ APPENDIX ============ -->
+<!-- ============ ANNEX ============ -->
 <section class="page appx">
-  <h2>Appendix A · Every timed run (developer pilot, 18 Oct, final app version)</h2>
-  <table>
-    <tr><th>Patient (public RIDER)</th><th>Timepoint</th><th>Active min</th><th>Open min</th><th>Nodules reviewed</th><th>Note</th></tr>
-    <tr><td>RIDER-1225316081</td><td>Baseline</td><td class="n">1</td><td class="n">1</td><td class="n">2</td><td></td></tr>
-    <tr><td>RIDER-1225316081</td><td>Follow-up 1</td><td class="n"><i>12</i></td><td class="n"><i>20</i></td><td class="n">3</td><td><b>Excluded:</b> scan left open while writing messages</td></tr>
-    <tr><td>RIDER-1332496276</td><td>Baseline</td><td class="n">1</td><td class="n">1</td><td class="n">2</td><td></td></tr>
-    <tr><td>RIDER-1332496276</td><td>Follow-up 1</td><td class="n">1</td><td class="n">1</td><td class="n">2</td><td></td></tr>
-    <tr><td>RIDER-1500037140</td><td>Baseline</td><td class="n">2</td><td class="n">2</td><td class="n">4</td><td></td></tr>
-    <tr><td>RIDER-1500037140</td><td>Follow-up 1</td><td class="n">2</td><td class="n">2</td><td class="n">4</td><td></td></tr>
-    <tr><td>RIDER-1532432635</td><td>Baseline</td><td class="n">2</td><td class="n">2</td><td class="n">5</td><td>incl. 2 rejected</td></tr>
-    <tr><td>RIDER-1532432635</td><td>Follow-up 1</td><td class="n">2</td><td class="n">2</td><td class="n">5</td><td>incl. 1 rejected + 1 not found</td></tr>
-    <tr><th>Included: 7 scans</th><th></th><th>1–2 (median 2)</th><th></th><th>2–5</th><th>developer, not a reader</th></tr>
-  </table>
-  <p class="note">Source: the app's own timer ("Minutes on scan" and the approval rows of the edit trail in the Excel export), active minutes: paused after 2 min without input or when the tab is hidden; whole minutes, so "1" means roughly 0.5–1.5 min.</p>
-
-  <h2 style="margin-top:12pt">Appendix B · Daniel's manual baseline (his words, Slack, 18 Oct)</h2>
-  <p>Per follow-up scan: loading 1–2 min; re-finding and matching ~10 min per nodule (aligns by bronchi and fissures; slice numbers are unreliable because of breathing); finding new nodules 10–20 min (two passes over 250–400 slices); measuring 2–4 min per nodule; full outline 15–25 min per tumour when needed; recording 3–5 min; total 40–55 min. His log ("Minutes on scan", last 5 rows): baseline 38, 49, 30, 37; follow-up 55. About two-thirds of incoming scans are follow-ups (his estimate).</p>
-
-  <h2 style="margin-top:12pt">Appendix C · Technical method</h2>
+  <h2>Annex A · Method</h2>
   <ul class="tight">
-    <li><b>Finding:</b> TotalSegmentator <code>lung_nodules</code> (nnU-Net, ~1,350 training CTs partly from LIDC-IDRI, not RIDER; Apache-2.0) at full settings, on a free Colab T4 GPU (median 49 s per scan). Lobes: TotalSegmentator <code>total</code>.</li>
-    <li><b>Outline:</b> the model's core plus a rim scaled to the core's size (shipped setting). Compared first with the model's own outline and MedSAM 2; four rim variants compared on the 52 tumours (<code>halo_variants_found52.csv</code>).</li>
-    <li><b>Measurements:</b> long axis = longest diameter on the slice where it is largest; short axis = longest perpendicular on that slice; volume from the 3D outline; lobe = majority lobe.</li>
-    <li><b>Matching:</b> affine lung registration (SimpleITK) + Hungarian pairing, gate max(10 mm, 0.75 × long axis).</li>
-    <li><b>Expert yardstick:</b> median absolute difference between the expert's manual outlines on the two scans of each patient (28 patients).</li>
-    <li><b>"AI unsure about the edges":</b> mean model probability over the outline &lt; 0.6, or the rim would grow the long axis by ≥ 4 mm.</li>
+    <li><b>Data:</b> RIDER Lung CT (public, The Cancer Imaging Archive): 31 patients, each scanned twice about 15 minutes apart; 59 scans with an expert outline of one tumour each (RIDER-LungCT-Seg). Tumours 13–93 mm (median 43 mm), mostly solid (53 solid, 6 part-solid), no ground-glass. The lab measures nodules from 4 mm, so these are larger and clearer than its usual cases.</li>
+    <li><b>How the AI ran:</b> the whole pipeline with no hint: lobes, then nodule finding (TotalSegmentator <code>lung_nodules</code>, full settings, free Colab T4 GPU, median 49 s per scan), then outline and measurement, then matching between each patient's two scans. The finding model was not trained on RIDER.</li>
+    <li><b>How quality was measured:</b> the AI's outline and the expert's outline of the same tumour are measured the same way, the way Daniel measures: longest width on the slice where the tumour is largest, the longest perpendicular width on that slice, and volume from the 3D outline. Error = AI minus expert, per tumour; we report the median of the absolute error and the median of the signed error (bias).</li>
+    <li><b>Expert noise (the yardstick):</b> the expert outlined the same tumour on both of a patient's scans, taken 15 minutes apart. The median difference between those two outlines (28 patients) is 2.3 mm for longest width and 17% for volume. The AI is "within expert noise" when its error is no larger.</li>
+    <li><b>Outline setting:</b> the model's core plus a rim scaled to the core's size (the shipped setting). It was chosen by comparing the model's own outline, MedSAM 2 and four rim variants on these same 52 tumours, so the quality numbers are somewhat optimistic.</li>
+    <li><b>What this measures:</b> the AI's first draft. The researcher's confirmed values (what goes into the sheet) were not measured.</li>
   </ul>
 
-  <h2 style="margin-top:12pt">Appendix D · Raw data and reproduction</h2>
-  <p>All in the engine repository, <code>results/</code>: <code>finding_exam_all59.csv</code> (one row per scan), <code>finding_exam_matching.csv</code> (per patient pair), <code>halo_variants_found52.csv</code> (outline settings; shipped = <code>scaled_*</code>), <code>small_nodule_repeatability.csv</code>, <code>expert_baseline.csv</code>, <code>central_check_blob_all59.csv</code>, <code>faint_flag_candidates.csv</code>, <code>daniel_steps.csv</code>, <code>time_log.csv</code>. <code>python results/make_figures.py</code> rebuilds every figure and prints every number in this report; <code>python results/build_pdf.py</code> rebuilds this PDF. Data: RIDER Lung CT (Zhao et al., 2015) and RIDER-LungCT-Seg (Wee et al., 2020), The Cancer Imaging Archive.</p>
+  <h2 style="margin-top:12pt">Annex B · Full numbers</h2>
+  <table>
+    <tr><th style="width:44%">Measure</th><th style="width:22%">Sample</th><th>Result</th></tr>
+    <tr><td>Expert tumour found</td><td>59 scans, 31 patients</td><td>52 / 59 (88%); solid 48 / 53, part-solid 4 / 6</td></tr>
+    <tr><td>Missed tumours</td><td>59 scans</td><td>7 scans, 4 patients; all central, 14–52 mm</td></tr>
+    <tr><td>Longest width, AI vs expert</td><td>52 tumours, 28 patients</td><td>median error 3.0 mm, bias −0.3 mm; 20 / 52 within 2.3 mm; 19 / 52 more than 5 mm off (13 too small, 6 too large)</td></tr>
+    <tr><td>Volume, AI vs expert</td><td>52 tumours, 28 patients</td><td>median error 14%, bias +0.5%; 27 / 52 within 17%</td></tr>
+    <tr><td>Overlap with expert outline (Dice)</td><td>52 tumours</td><td>median 0.76</td></tr>
+    <tr><td>Matched to the earlier scan</td><td>24 patient pairs</td><td>24 / 24; alignment error at the tumour median 2.9 mm (max 13.9)</td></tr>
+    <tr><td>Lobe agrees with expert outline</td><td>52 tumours</td><td>52 / 52</td></tr>
+    <tr><td>Other AI marks per scan</td><td>59 scans</td><td>median 3; 82% reappear on the patient's other scan (a proxy for false alarms only)</td></tr>
+    <tr><td>Small nodules (&lt; 8 mm), same nodule on both scans</td><td>84 pairs, 22 patients</td><td>width differs by median 0.5 mm; volume by ~30%</td></tr>
+    <tr><td>"AI unsure about the edges" on likely-too-small outlines</td><td>52 tumours; 322 AI marks</td><td>flags all 4 small faint tumours drawn much too small; fires on 12% of all marks (tuned on 4 cases)</td></tr>
+    <tr><td>Automatic "check the centre" warning (dropped)</td><td>59 scans</td><td>best version flagged 4 of the 7 missed scans, but also 49 of the other 52</td></tr>
+    <tr><td>Tool's own steps (developer pilot)</td><td>7 scans, 4 patients</td><td>1–2 active min per scan (median 2)</td></tr>
+  </table>
+
+  <h2 style="break-before: page">Annex C · All 8 developer runs</h2>
+  <table class="runs">
+    <tr><th>Patient (public RIDER)</th><th>Timepoint</th><th>Active min</th><th>Open min</th><th>Nodules reviewed</th><th>Note</th></tr>
+    <tr><td>RIDER-1225316081</td><td>Baseline</td><td>1</td><td>1</td><td>2</td><td></td></tr>
+    <tr><td>RIDER-1225316081</td><td>Follow-up 1</td><td><i>12</i></td><td><i>20</i></td><td>3</td><td><b>Excluded:</b> scan left open while writing messages, so the timer measured something else</td></tr>
+    <tr><td>RIDER-1332496276</td><td>Baseline</td><td>1</td><td>1</td><td>2</td><td></td></tr>
+    <tr><td>RIDER-1332496276</td><td>Follow-up 1</td><td>1</td><td>1</td><td>2</td><td></td></tr>
+    <tr><td>RIDER-1500037140</td><td>Baseline</td><td>2</td><td>2</td><td>4</td><td></td></tr>
+    <tr><td>RIDER-1500037140</td><td>Follow-up 1</td><td>2</td><td>2</td><td>4</td><td></td></tr>
+    <tr><td>RIDER-1532432635</td><td>Baseline</td><td>2</td><td>2</td><td>5</td><td>incl. 2 rejected</td></tr>
+    <tr><td>RIDER-1532432635</td><td>Follow-up 1</td><td>2</td><td>2</td><td>5</td><td>incl. 1 rejected + 1 not found</td></tr>
+    <tr><th>Included: 7 scans</th><th></th><th>1–2 (median 2)</th><th></th><th>2–5</th><th>developer, not a trained reader</th></tr>
+  </table>
+  <p class="note">18 Oct, final app version, by the developer (Stav). Source: the app's own timer ("Minutes on scan" and the approval rows of the edit trail in the Excel export). Active minutes pause after 2 minutes without input or when the tab is hidden; whole minutes, so "1" means roughly 0.5–1.5 min. These runs measure the tool's mechanics, not a trained reader's judgement.</p>
+
+  <h2 style="margin-top:12pt">Annex D · Daniel's step breakdown (his words, Slack, 18 Oct)</h2>
+  <table>
+    <tr><th style="width:40%">Step (follow-up scan)</th><th style="width:22%">Minutes</th><th>Unit</th></tr>
+    <tr><td>Loading</td><td>1–2</td><td>per scan</td></tr>
+    <tr><td>Re-finding and matching (aligns by bronchi and fissures; slice numbers are unreliable because of breathing)</td><td>~10</td><td>per nodule</td></tr>
+    <tr><td>Finding new nodules (two passes over 250–400 slices)</td><td>10–20</td><td>per scan</td></tr>
+    <tr><td>Measuring</td><td>2–4</td><td>per nodule</td></tr>
+    <tr><td>Full outline</td><td>15–25</td><td>per tumour, when needed</td></tr>
+    <tr><td>Recording</td><td>3–5</td><td>per scan</td></tr>
+    <tr><th>Total (his own figure)</th><th>40–55</th><th>per scan</th></tr>
+  </table>
+  <p class="note">Some steps are per nodule, so the total is Daniel's own figure, not a sum we calculated. His log ("Minutes on scan", last 5 rows): baseline 38, 49, 30, 37 (mean ≈ 39); follow-up 55. About two-thirds of incoming scans are follow-ups (his estimate). He has not broken down a baseline scan.</p>
+
+  <h2 style="margin-top:12pt">Annex E · Credits</h2>
+  <ul class="tight">
+    <li><b>RIDER Lung CT:</b> Zhao, B. et al. (2015). <i>Coffee-break lung CT collection with scan images reconstructed at multiple imaging parameters.</i> The Cancer Imaging Archive. doi:10.7937/k9/tcia.2015.u1x8a5nr (CC BY 3.0).</li>
+    <li><b>RIDER-LungCT-Seg:</b> Wee, L., Aerts, H., Kalendralis, P., &amp; Dekker, A. (2020). <i>RIDER Lung CT Segmentation Labels.</i> The Cancer Imaging Archive. doi:10.7937/tcia.2020.jit9grk8.</li>
+    <li><b>TotalSegmentator</b> (Wasserthal, J. et al., 2023), including the <code>lung_nodules</code> model by BlueMind AI. Apache-2.0.</li>
+    <li><b>MedSAM 2</b> (Ma, J. et al., 2025, arXiv:2504.03600), compared, not used. <b>SimpleITK</b> for lung alignment.</li>
+    <li><b>Base44</b> for the review app. Full code, raw data and the long version of these results (<code>RESULTS.md</code>) are in the repository; <code>python results/make_figures.py</code> rebuilds every figure and number.</li>
+  </ul>
 </section>
 
 </body>
