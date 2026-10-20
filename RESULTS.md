@@ -1,7 +1,7 @@
 # Results — LungMarker
 
 **Research use only. Not for clinical use. No clinical claims.**
-Status: draft, 18 Oct 2026. Quality and failure numbers come from a test on public data (RIDER Lung CT). Timing is an estimate: Daniel's own step-by-step account of his manual review, a developer pilot that measures the tool's own steps, and Daniel's estimate of checking time.
+Status: draft, 20 Oct 2026. Quality and failure numbers come from a test on public data (RIDER Lung CT). Timing is an estimate: Daniel's own step-by-step account of his manual review, a developer pilot that measures the tool's own steps, and Daniel's estimate of checking time.
 Figures are made by `python results/make_figures.py` from the CSVs in `results/`, so they update when the numbers change.
 
 The lab asked for three things for its lab meeting and grant panel: **an honest timing comparison, a quality comparison, and clear failure cases.** They come first, in that order. Details follow below in the same order.
@@ -10,12 +10,12 @@ The lab asked for three things for its lab meeting and grant panel: **an honest 
 
 ## 1. Timing comparison
 
-> **Takeaway (estimate): a follow-up scan that takes Daniel 40–55 min today would take about 9–19 min with the tool, under half in every case. That rests on two inputs: the tool's own steps, measured at 1–2 min per scan (7 developer runs), and Daniel's own estimate that checking a draft takes 20–30% of the time of doing it from scratch, not a measurement. The saving holds as long as checking stays under about 45% of doing it by hand. The next step is Daniel's own timed reviews.**
+> **Takeaway (estimate): a follow-up scan (two nodules) that takes Daniel 40–55 min today would take about 13–17 min with the tool, roughly 60–75% less. That rests on the tool's own steps, measured at 1–2 min per scan (7 developer runs), and on Daniel's own estimate that checking a draft takes 20–30% of the time of doing it from scratch, not a measurement. The tool still saves half as long as checking stays under about 45% of doing it by hand. Not every draft is solid, so some scans will take longer. The next step is Daniel's own timed reviews.**
 
 | | Share of incoming scans | Today: Daniel, manual | Tool's own steps, measured (developer pilot) | Checking each draft (Daniel's estimate) | With the tool (estimate) |
 |---|---|---|---|---|---|
 | Baseline | ⅓ | ~39 min (log, 4 scans) | 1–2 active min (4 scans) | 20–30% of doing it by hand | not estimated (no step breakdown yet) |
-| Follow-up | ⅔ | 40–55 min (Daniel's own step-by-step estimate); log: 55 min (1 scan) | 1–2 active min (3 scans; 1 excluded) | 20–30% of doing it by hand | **~9–19 min** (~13–19 at his upper estimate, 30%); half of today = 20–27.5 min |
+| Follow-up | ⅔ | 40–55 min (Daniel's own step-by-step estimate); log: 55 min (1 scan) | 1–2 active min (3 scans; 1 excluded) | 20–30% of doing it by hand | **≈ 13–17 min** (two nodules), roughly 60–75% less; half of today = 20–27.5 min |
 | **Per incoming scan (weighted)** | | **~45 min** (~50 with the log figure) | | | not estimated |
 
 - **What the pilot measures:** the tool's mechanics (opening a scan, accepting or rejecting marks, confirming and editing outlines, matching, approving, export), done by the developer on public scans. It does **not** include a trained reader's checking time, which is where most of Daniel's time goes.
@@ -79,12 +79,13 @@ Naomi told us why the vendor tool the lab tried last year failed. Each reason, a
 
 **Combining them.** For one follow-up scan:
 
-> **With the tool ≈ the tool's own steps (1–2 min, measured) + f × today's manual time (40–55 min)**
+> **With the tool ≈ opening 0.5 + checking (f × 41) + tool steps 1.5 + centre check 2.5** (minutes)
 
-- **Result:** about **9–19 min per follow-up** (1 + 0.20 × 40 = 9 at the low end; 2 + 0.30 × 55 = 18.5 at the high end). At Daniel's upper estimate (f = 0.30) alone: about 13–19 min.
-- **Against the lab's target:** half of today is 20–27.5 min, so the estimate is under half in every combination: more than half of the time saved.
-- **Break-even:** the tool still saves half as long as checking takes less than **about 45%** of doing it by hand (f = (½ × today − 2 min) / today = 0.45–0.46). Daniel's estimate (20–30%) leaves room for error.
-- **Errs on the slow side:** f is applied to his whole manual time, including recording (3–5 min), which the tool removes.
+- **The parts:** opening the scan 0.5 min (loading, 1–2 min today, is mostly gone: the AI has already run); the tool's own steps 1.5 min (midpoint of the measured 1–2); the required central check 2.5 min; and checking the AI's drafts, f × 41 min. **41 min = what the tool shortens for two nodules: searching 15 (midpoint of 10–20) + matching 2 × 10 + measuring 2 × 3.** Recording (3–5 min) is removed: values are saved as he goes and exported once a day.
+- **Result:** 0.5 + 0.20 × 41 + 1.5 + 2.5 ≈ 13 min at f = 0.20; 0.5 + 0.30 × 41 + 1.5 + 2.5 ≈ 17 min at f = 0.30. So **≈ 13–17 min per follow-up vs 40–55 today, roughly 60–75% less.**
+- **Against the lab's target:** half of today is 20–27.5 min, so the estimate is under half across Daniel's range.
+- **Break-even:** the tool still saves half as long as checking takes less than **about 45%** of doing it by hand (f < ~0.45, solving 4.5 + 41 f = ½ × today at today's midpoint of 47.5 min; it is ~0.38 if today is 40 min and ~0.56 if 55). Daniel's estimate (20–30%) leaves room for error.
+- **Not included:** full outlines (15–25 min per tumour, only when needed) aren't in the 41 min, on either side; the estimate is for two nodules, and more nodules add matching and measuring time.
 - **What could make it slower:** drafts that aren't "generally solid" (19 of 52 outlines more than 5 mm off; missed central tumours to add by hand), and the new steps (deciding on each AI mark, the central check), which his estimate may not fully cover.
 
 **What the pilot shows on its own:** the tool's mechanics are not where the time goes. For 2–5 nodules per scan, opening, confirming, editing, matching and exporting took about 1–2 active minutes. The open question is how fast a trained reader checks the drafts; Daniel's estimate gives a first answer, and his timed reviews would measure it.
@@ -111,7 +112,7 @@ Naomi told us why the vendor tool the lab tried last year failed. Each reason, a
 | Recording | 3–5 min per scan | Values saved as he goes; one Excel export into his sheet's format, usually once a day. | Removed from the per-scan time | One export a day (overhead) |
 | *New:* deciding on each AI mark | — | Accept or reject every AI suggestion, including false marks. | Added | **Checking: part of Daniel's estimate** |
 | *New:* central-areas check | — | Required tick before Approve: "I checked the hilum and mediastinum". | Added | **Checking: part of Daniel's estimate** |
-| **Total** | **40–55 min** (his own total) | | | **~9–19 min: tool's steps 1–2 min (measured) + checking 20–30% (his estimate)** |
+| **Total** | **40–55 min** (his own total) | | | **≈ 13–17 min = opening 0.5 + checking (f × 41) + tool steps 1.5 + centre check 2.5, f = 0.20–0.30 (his estimate)** |
 
 **Developer pilot: tool overhead per scan** (`results/time_log.csv`; whole active minutes from the app's timer):
 
@@ -129,9 +130,9 @@ Naomi told us why the vendor tool the lab tried last year failed. Each reason, a
 
 **Per follow-up scan, today vs with the tool (estimate):**
 
-| | Today: Daniel | Tool's own steps (measured) | Checking (Daniel's estimate) | With the tool | Half of today | Break-even |
-|---|---|---|---|---|---|---|
-| Follow-up | 40–55 min | 1–2 min (n = 7 runs) | f = 0.20–0.30 | **~9–19 min** (13–19 at f = 0.30) | 20–27.5 min | f < ~0.45 |
+| | Today: Daniel | Opening | Tool's own steps (measured 1–2) | Centre check | Checking: f × 41 min (f = Daniel's estimate) | With the tool | Less than today | Half of today | Break-even |
+|---|---|---|---|---|---|---|---|---|---|
+| Follow-up, two nodules | 40–55 min | 0.5 min | 1.5 min | 2.5 min | 8.2–12.3 min (f = 0.20–0.30) | **≈ 13–17 min** | roughly 60–75% | 20–27.5 min | f < ~0.45 |
 
 ![Time](results/figures/time_before_after.png)
 

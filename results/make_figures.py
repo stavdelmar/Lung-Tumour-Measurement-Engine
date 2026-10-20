@@ -151,6 +151,12 @@ DANIEL_STEPS = HERE / "daniel_steps.csv"
 # Daniel (Slack, 20 Oct): checking a match or an outline takes "about 20-30% of the time" of doing it from
 # scratch, "assuming the draft is generally solid". This is HIS estimate, not a measurement and not ours.
 F_DANIEL = (0.20, 0.30)
+# Estimate for one follow-up scan with two nodules (same calculation as the results PDF):
+#   opening 0.5 + checking f x 41 + tool steps 1.5 + centre check 2.5   (minutes)
+# 41 = what the tool shortens: searching 15 (midpoint of 10-20) + matching 2 x 10 + measuring 2 x 3.
+EST_NODULES = 2
+EST_FIXED = {"opening": 0.5, "tool steps": 1.5, "centre check": 2.5}
+EST_SHORTENED = {"searching": 15, "matching": EST_NODULES * 10, "measuring": EST_NODULES * 3}
 STAV_RUNS = HERE / "time_log.csv"
 # time_log.csv: patient, timepoint (Baseline | Follow-up 1), active_minutes, open_minutes, nodules_reviewed, who, note
 # Rows whose note starts with "exclude" are left out (e.g. scan left open while doing something else).
@@ -206,26 +212,29 @@ def time_numbers():
     return before, overhead, fu_total, upper
 
 
-def with_tool_estimate(fu_total, overhead, f=F_DANIEL):
-    """Follow-up time with the tool = tool overhead (measured) + f x today's manual time (Daniel's f).
-    f is applied to his WHOLE manual time, including the steps the tool removes (recording), so this errs on the
-    slow side. Returns the full range, the range at Daniel's upper f, half of today, and the break-even f
-    (the f at which the tool would save exactly half)."""
-    if not (fu_total and overhead):
+def with_tool_estimate(fu_total, overhead=None, f=F_DANIEL):
+    """Follow-up with the tool = opening + f x (minutes the tool shortens) + tool steps + centre check.
+    Returns the estimate for Daniel's f range, % less than today, half of today, and the break-even f
+    (the f at which the tool saves exactly half) at today's low / mid / high time."""
+    if not fu_total:
         return None
-    (t_lo, t_hi), (o_lo, o_hi), (f_lo, f_hi) = fu_total, (overhead["min"], overhead["max"]), f
+    fixed = sum(EST_FIXED.values())
+    shortened = sum(EST_SHORTENED.values())
+    est = tuple(fixed + fi * shortened for fi in f)
+    t_lo, t_hi = fu_total
+    t_mid = (t_lo + t_hi) / 2
     return {
-        "f": f,
-        "range": (o_lo + f_lo * t_lo, o_hi + f_hi * t_hi),
-        "range_f_hi": (o_lo + f_hi * t_lo, o_hi + f_hi * t_hi),
+        "f": f, "fixed": fixed, "shortened": shortened, "est": est,
+        "check": tuple(fi * shortened for fi in f),
+        "pct_less": (1 - est[1] / t_lo, 1 - est[0] / t_hi),
         "half": (t_lo / 2, t_hi / 2),
-        "break_even": ((t_lo / 2 - o_hi) / t_lo, (t_hi / 2 - o_hi) / t_hi),
+        "break_even": tuple((t / 2 - fixed) / shortened for t in (t_lo, t_mid, t_hi)),
     }
 
 
 def time_figure(fu_total, overhead, est):
-    """One follow-up scan: Daniel today vs with the tool (measured tool steps + Daniel's own estimate of checking)."""
-    fig, ax = plt.subplots(figsize=(9, 3.2))
+    """One follow-up scan (two nodules): Daniel today vs the estimate with the tool, built from its parts."""
+    fig, ax = plt.subplots(figsize=(9, 3.3))
     y_today, y_tool = 1.0, 0.0
     if fu_total:
         lo, hi = fu_total
@@ -236,19 +245,23 @@ def time_figure(fu_total, overhead, est):
         h_lo, h_hi = est["half"]
         ax.axvspan(h_lo, h_hi, color=ORANGE, alpha=0.10, zorder=0)
         ax.text((h_lo + h_hi) / 2, 1.42, "half of today", ha="center", fontsize=8.5, color=ORANGE)
-        r_lo, r_hi = est["range"]
-        ax.barh(y_tool, overhead["max"], 0.42, color=BLUE)
-        ax.barh(y_tool, r_lo - overhead["max"], 0.42, left=overhead["max"], color=BLUE, alpha=0.55)
-        ax.barh(y_tool, r_hi - r_lo, 0.42, left=r_lo, color=BLUE, alpha=0.25)
-        ax.text(r_hi + 0.8, y_tool, f"~{r_lo:.0f}\u2013{math.ceil(r_hi)} min", va="center", fontsize=9.5, fontweight="bold")
-        ax.text(0, y_tool - 0.36,
-                f"dark: tool's own steps, measured ({overhead['min']:.0f}\u2013{overhead['max']:.0f} min, n = {overhead['n']}, developer)  \u00b7  "
-                f"light: checking time, Daniel's estimate (f = {est['f'][0]:.2f}\u2013{est['f'][1]:.2f} of doing it by hand)",
+        x = 0
+        for (name, mins), col in zip(EST_FIXED.items(), [INK2, BLUE, AQUA]):
+            ax.barh(y_tool, mins, 0.42, left=x, color=col)
+            x += mins
+        c_lo, c_hi = est["check"]
+        ax.barh(y_tool, c_lo, 0.42, left=x, color=BLUE, alpha=0.55)
+        ax.barh(y_tool, c_hi - c_lo, 0.42, left=x + c_lo, color=BLUE, alpha=0.25)
+        e_lo, e_hi = est["est"]
+        ax.text(e_hi + 0.8, y_tool, f"\u2248 {e_lo:.0f}\u2013{e_hi:.0f} min", va="center", fontsize=9.5, fontweight="bold")
+        ax.text(0, y_tool - 0.37,
+                f"opening {EST_FIXED['opening']:g} + tool steps {EST_FIXED['tool steps']:g} (measured 1\u20132) + centre check {EST_FIXED['centre check']:g}"
+                f" + checking f \u00d7 {est['shortened']:.0f} min (f = {est['f'][0]:.2f}\u2013{est['f'][1]:.2f}, Daniel's estimate)",
                 va="center", fontsize=8, color=INK2)
     ax.set_yticks([y_tool, y_today], ["With the tool\n(estimate)", "Daniel today\n(manual)"])
     ax.set_xlim(0, 75)
     ax.set_ylim(-0.75, 1.55)
-    ax.set_xlabel("minutes per follow-up scan")
+    ax.set_xlabel("minutes per follow-up scan (two nodules)")
     ax.grid(axis="y", visible=False)
     ax.set_title("One follow-up scan, today vs with the tool (ESTIMATE)", loc="left", fontweight="bold", fontsize=11)
     fig.tight_layout()
@@ -290,14 +303,13 @@ def summary_figure(f, noise_mm, fu_total, overhead, est):
         ax.barh(1, lo, 0.45, color=INK2); ax.barh(1, hi - lo, 0.45, left=lo, color=INK2, alpha=0.45)
         ax.text(hi + 1, 1, f"{lo:.0f}\u2013{hi:.0f} min", va="center", fontsize=9)
     if est:
-        r_lo, r_hi = est["range"]
+        e_lo, e_hi = est["est"]
         ax.axvspan(*est["half"], color=ORANGE, alpha=0.10, zorder=0)
-        ax.barh(0, overhead["max"], 0.45, color=BLUE)
-        ax.barh(0, r_lo - overhead["max"], 0.45, left=overhead["max"], color=BLUE, alpha=0.55)
-        ax.barh(0, r_hi - r_lo, 0.45, left=r_lo, color=BLUE, alpha=0.25)
-        ax.text(r_hi + 1, 0, f"~{r_lo:.0f}\u2013{math.ceil(r_hi)} min", va="center", fontsize=9)
-        ax.text(0, -0.55, f"tool steps measured ({overhead['min']:.0f}\u2013{overhead['max']:.0f} min);", fontsize=8, color=INK, va="center")
-        ax.text(0, -0.85, f"checking = Daniel's estimate (f {est['f'][0]:.2f}\u2013{est['f'][1]:.2f}); shaded: half of today", fontsize=8, color=INK2, va="center")
+        ax.barh(0, e_lo, 0.45, color=BLUE, alpha=0.75)
+        ax.barh(0, e_hi - e_lo, 0.45, left=e_lo, color=BLUE, alpha=0.3)
+        ax.text(e_hi + 1, 0, f"\u2248 {e_lo:.0f}\u2013{e_hi:.0f} min", va="center", fontsize=9)
+        ax.text(0, -0.55, f"opening + tool steps + centre check + checking (f {est['f'][0]:.2f}\u2013{est['f'][1]:.2f},", fontsize=8, color=INK2, va="center")
+        ax.text(0, -0.85, "Daniel's estimate); shaded: half of today", fontsize=8, color=INK2, va="center")
     ax.set_yticks([0, 1], ["with the tool\n(estimate)", "Daniel today"])
     ax.set_xlim(0, 70); ax.set_ylim(-1.0, 1.5); ax.grid(axis="y", visible=False)
     ax.set_xlabel("minutes per follow-up scan")
@@ -326,9 +338,10 @@ def main():
         print(f"tool overhead (developer pilot): {overhead['min']:.0f}-{overhead['max']:.0f} active min, median {overhead['median']:.0f}, "
               f"n = {overhead['n']} ({overhead['n_excluded']} excluded), {overhead['nodules'][0]}-{overhead['nodules'][1]} nodules per scan")
     if est:
-        print(f"with the tool, follow-up (Daniel's f = {est['f'][0]:.2f}-{est['f'][1]:.2f}): ~{est['range'][0]:.1f}-{est['range'][1]:.1f} min "
-              f"(at f = {est['f'][1]:.2f}: ~{est['range_f_hi'][0]:.1f}-{est['range_f_hi'][1]:.1f}); half of today = {est['half'][0]:.1f}-{est['half'][1]:.1f} min; "
-              f"break-even f = {est['break_even'][0]:.2f}-{est['break_even'][1]:.2f}")
+        print(f"with the tool, follow-up, {EST_NODULES} nodules: {est['fixed']:g} fixed + f x {est['shortened']:.0f} = "
+              f"{est['est'][0]:.1f}-{est['est'][1]:.1f} min (f = {est['f'][0]:.2f}-{est['f'][1]:.2f}); "
+              f"{100*est['pct_less'][0]:.0f}-{100*est['pct_less'][1]:.0f}% less than today; half of today = {est['half'][0]:.1f}-{est['half'][1]:.1f}; "
+              f"break-even f = {est['break_even'][1]:.2f} at today's midpoint ({est['break_even'][0]:.2f}-{est['break_even'][2]:.2f} across 40-55)")
     print(f"figures written to {OUT}")
 
 
