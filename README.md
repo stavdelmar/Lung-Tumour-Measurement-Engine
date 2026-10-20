@@ -99,25 +99,18 @@ The Worklist fills itself with the demo scans. Open one, review, approve, then *
 During the review period, anyone who signs in is a reviewer and can try the full review (demo data only). The owner can switch a user to read-only in *Settings → User roles*.
 App code, tests and local setup: see the [app README](https://github.com/stavdelmar/lungmarker#readme).
 
-### 2. Re-run the AI on the RIDER scans (Colab, free GPU)
-Python 3.10+. `requirements-engine.txt` is the current engine; `requirements.txt` is only for the earlier lungmask version (`engine/classic.py`).
-
-1. Open `notebooks/nodule_finding_exam.ipynb` in Google Colab, runtime **T4 GPU**.
-2. Run all. It downloads RIDER Lung CT and the expert outlines from TCIA's public API, runs the whole pipeline
-   (~1 min per scan) and saves `finding_results.zip` (the exam CSVs) and `engine_cache.zip` (the AI drafts).
-3. Locally: `pip install -r requirements-engine.txt`, then build the static API for the app:
-   ```
-   python -m engine.build_demo <nii_dir> <cache_dir> <state_dir> <out_dir> RIDER-1225316081 RIDER-1500037140 ...
-   ```
-   `<nii_dir>` = scans converted with `engine/prepare_data.py`; `<cache_dir>` = unzipped `engine_cache.zip`.
-   Serve `<out_dir>` from any static host (we use Amazon S3) and point the app's *Engine base URL* at it.
-
-### 3. Reproduce the results and figures
+### 2. Reproduce the results and figures (no GPU)
 ```
 pip install pandas matplotlib
 python results/make_figures.py
 ```
-Prints the headline numbers and rewrites `results/figures/*.png`. See [RESULTS.md](RESULTS.md).
+Uses the result CSVs already in the repo. Prints the headline numbers and rewrites `results/figures/*.png`. See [RESULTS.md](RESULTS.md).
+
+### 3. Optional: re-run the AI from scratch (only to verify the numbers)
+Not needed to use the app or check the results: the app already reads the AI's drafts, and step 2 uses the saved CSVs.
+This is for anyone who wants to see the AI produce those CSVs themselves.
+Open `notebooks/nodule_finding_exam.ipynb` in Google Colab (free **T4 GPU**) and *Run all*: it downloads RIDER Lung CT and the expert outlines from TCIA's public API (~1 min per scan) and saves the result CSVs and the AI drafts.
+To rebuild the demo data the app reads, see [Rebuilding the demo data](docs/engine_api.md#rebuilding-the-demo-data).
 
 ### 4. Live engine (optional, not deployed)
 ```

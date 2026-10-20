@@ -76,3 +76,15 @@ So the demo scans are processed ahead of time on Colab and loaded into the engin
 ## 8. Not in the engine (app does it)
 Axes from a dragged outline (or call `refine` with `polygon_px` to get them from the engine), mean diameter after
 caliper edits, storing edits/approvals/timer, export.
+
+## Rebuilding the demo data
+
+Python 3.10+. `requirements-engine.txt` is the current engine; `requirements.txt` is only for the earlier lungmask version (`engine/classic.py`).
+
+1. Run `notebooks/nodule_finding_exam.ipynb` in Google Colab (T4 GPU). It saves `finding_results.zip` (the exam CSVs) and `engine_cache.zip` (the AI drafts).
+2. Locally: `pip install -r requirements-engine.txt`, then build the static API:
+   ```
+   python -m engine.build_demo <nii_dir> <cache_dir> <state_dir> <out_dir> RIDER-1225316081 RIDER-1500037140 ...
+   ```
+   `<nii_dir>` = scans converted with `engine/prepare_data.py`; `<cache_dir>` = unzipped `engine_cache.zip`.
+3. Serve `<out_dir>` from any static host (we use Amazon S3) and point the app's *Engine base URL* at it.
