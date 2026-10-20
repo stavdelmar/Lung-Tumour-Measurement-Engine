@@ -96,7 +96,7 @@ Before talking to the lab we wrote down five assumptions to check (plan doc, 15 
 Open https://lung-marker-scan.base44.app and sign in with Google (one click). Settings → *Engine base URL* points at the demo data
 (`https://lungmarker-demo-data-sd.s3.eu-north-1.amazonaws.com/api/v1`).
 The Worklist fills itself with the demo scans. Open one, review, approve, then *Dashboard → Reports → Export to Excel*.
-New accounts are read-only viewers. The owner grants the reviewer role (needed to edit and approve) in *Settings → User roles*.
+During the review period, anyone who signs in is a reviewer and can try the full review (demo data only). The owner can switch a user to read-only in *Settings → User roles*.
 App code, tests and local setup: see the [app README](https://github.com/stavdelmar/lungmarker#readme).
 
 ### 2. Re-run the AI on the RIDER scans (Colab, free GPU)
