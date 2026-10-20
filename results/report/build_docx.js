@@ -174,11 +174,11 @@ const page2 = [
     ["Full outline", "15–25 min per tumour, when needed", "Outline drafted for every nodule; he confirms", "Shortened"],
     ["Typing into Excel", "3–5 min", "One export a day in his format", "Removed"],
     ["New", "—", "Accept or reject each AI suggestion; tick the centre-of-chest check", "Added"],
-    ["Total", "40–55 min", "With the tool: its own steps 1–2 min (measured, 7 scans) + his checking (not measured)", ""],
+    ["Total", "40–55 min", "With the tool: ~9–19 min = its own steps 1–2 min (measured, 7 scans) + his checking, 20–30% of doing it by hand (his estimate)", ""],
   ], [0.22, 0.22, 0.38, 0.18], { totalLast: true }),
   ...image("time_before_after.png", 520),
-  P("**How to read this.** The blue bar is all I could measure: the tool's own steps (opening, accepting, confirming, matching, exporting), 1–2 active minutes per scan over 7 developer runs on public scans (2–5 nodules each; 1 more run excluded, see Annex C). The hatched part is Daniel's time to check each AI suggestion, which only he can show. If checking were instant, a follow-up would take a few minutes; if it took as long as doing it by hand, about 35–52 min. So I give a range for one follow-up (compare it with today's 40–55 min, not the 45-min average), and no single number or percentage saved.", { size: 17 }),
-  P("**Limitation and next step.** The lab's users are simulated: they answer questions but can't open the tool, so no real reader was timed and no real usability test was possible. Daniel approved the flow from screenshots and one external tester (a doctor) tried the tool. The measurement itself is built in: the app times every scan the way Daniel logs it today (the whole review, without long breaks) and fills his \"Minutes on scan\" column. **Next step:** Daniel's own timed reviews, with and without the tool, on a small set of the lab's scans.", { size: 17 }),
+  P("**With the tool (estimate).** Time with the tool = the tool's own steps (measured: 1–2 active min per scan, 7 developer runs, 2–5 nodules each; 1 more run excluded, see Annex C) + checking each AI draft. Checking wasn't timed: Daniel estimates it takes \"about 20–30% of the time\" of doing it from scratch, \"assuming the draft is generally solid\" (Slack, 20 Oct). Applied to his 40–55 min follow-up, that gives **about 9–19 min per follow-up** (13–19 min at his upper estimate), under half of today's time (20–27.5 min) in every case. The saving holds as long as checking takes less than **about 45%** of doing it by hand. This rests on Daniel's estimate, not a measurement, and on the drafts being solid: 19 of 52 outlines were more than 5 mm off and central tumours are missed, so those cases take longer.", { size: 17 }),
+  P("**Limitation and next step.** The lab's users are simulated: they answer questions but can't open the tool, so no real reader was timed (checking time is Daniel's estimate) and no real usability test was possible. Daniel approved the flow from screenshots and one external tester (a doctor) tried the tool. The measurement itself is built in: the app times every scan the way Daniel logs it today (the whole review, without long breaks) and fills his \"Minutes on scan\" column. **Next step:** Daniel's own timed reviews, with and without the tool, on a small set of the lab's scans, to replace his estimate with a measurement.", { size: 17 }),
   pageBreak(),
 ];
 
@@ -204,6 +204,7 @@ const annex = [
     ["\"AI unsure about the edges\" on likely-too-small outlines", "52 tumours; 322 AI marks", "flags all 4 small faint tumours drawn much too small; fires on 12% of all marks (tuned on 4 cases)"],
     ["Automatic \"check the centre\" warning (dropped)", "59 scans", "best version flagged 4 of the 7 missed scans, but also 49 of the other 52"],
     ["Tool's own steps (developer pilot)", "7 scans, 4 patients", "1–2 active min per scan (median 2)"],
+    ["Follow-up with the tool (estimate)", "Daniel's estimate f = 0.20–0.30", "1–2 min + f × 40–55 min ≈ 9–19 min (13–19 at f = 0.30); half of today 20–27.5 min; break-even f ≈ 0.45"],
   ], [0.40, 0.22, 0.38]),
   pageBreak(),
   H2("Annex C · All 8 developer runs"),
