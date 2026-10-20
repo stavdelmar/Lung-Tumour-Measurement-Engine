@@ -8,6 +8,8 @@ The AI finds nodules ahead of time and drafts the outline, axes, volume, lobe an
 The researcher reviews each one, fixes what's wrong, checks the central areas the AI misses, approves,
 and exports straight into the lab's Excel master sheet with an edit trail.
 
+**Reviewing in 10 minutes:** open the [live app](https://lung-marker-scan.base44.app) (sign in with Google, one click) → open a follow-up scan, e.g. RIDER-1500037140 → review, approve and export to Excel → read the [2-page results PDF](results/LungMarker_Results.pdf).
+
 - **Live app:** https://lung-marker-scan.base44.app. Sign in with Google (one click).
 - **Results, short version (2 pages + annex):** [results/LungMarker_Results.pdf](results/LungMarker_Results.pdf)
 - **Results, full version:** [RESULTS.md](RESULTS.md)
@@ -42,7 +44,7 @@ Research Fellow, who measures every scan by hand. Their study has ~390 scans wai
 | 7 | Central tumours near the hilum and mediastinum are "common enough" in our cohort. | Daniel | Every AI miss in our test was central, so Approve requires **"I checked the hilum and mediastinum"**, with a one-click switch to the mediastinal window and Add nodule. An automatic "check here" flag was tried and dropped (too many false alarms). | ✅ Built (manual check) |
 | 8 | Show me clearly when the AI is unsure. | Daniel | "AI unsure about the edges" label, amber colour, a count at the top of the list, and "may be larger than drawn" when the outline is likely too small. | ✅ Built; the signal is about edges, not "is this a nodule" |
 | 9 | I work patient by patient, and I look up the prior scan in my sheet by hand. | Daniel | Worklist grouped by patient (baseline, then follow-ups), prior already linked, "Next scan for this patient". | ✅ Built |
-| 10 | Halve my time per scan, with no drop in quality. "Minutes on scan" = the whole process, without long breaks. | Naomi, Daniel | Built-in timer fills "Minutes on scan" with active minutes; before vs after in [RESULTS.md](RESULTS.md). | ⏳ Timer built. Estimate: ≈ 13–17 min per follow-up (two nodules) vs 40–55 today, roughly 60–75% less (opening 0.5 + checking f × 41 + tool steps 1.5, measured 1–2 + centre check 2.5; f = 20–30%, Daniel's estimate); see RESULTS |
+| 10 | Halve my time per scan, with no drop in quality. "Minutes on scan" = the whole process, without long breaks. | Naomi, Daniel | Built-in timer fills "Minutes on scan" with active minutes; before vs after in [RESULTS.md](RESULTS.md). | ⏳ Timer built. Estimate: ≈ 13–17 min per follow-up vs 40–55 today, roughly 60–75% less (not yet measured on Daniel; see RESULTS) |
 
 ### What we assumed → what we learned
 
@@ -86,15 +88,14 @@ Before talking to the lab we wrote down five assumptions to check (plan doc, 15 
 | `engine/` | Engine code (`experiments/` = one-off checks behind decisions in RESULTS, e.g. the dropped central flag): `detect.py` (finding + lobes), `measure.py`, `match.py`, `correct.py` (click-to-correct, live mode only), `api.py` (FastAPI), `export_static.py` / `build_demo.py` (static API for the app), `eval_detection.py` + `summarize_exam.py` (the 59-scan exam) |
 | `notebooks/` | Colab notebooks: `nodule_finding_exam.ipynb` (whole pipeline on all 59 scans), `medsam2_vs_our_engine.ipynb` (outline comparison) |
 | `results/` | Raw results CSVs, `make_figures.py`, `figures/`, the short report `LungMarker_Results.pdf` (built by `build_pdf.py` from `report/report.html`) |
-| `demo/` | How the demo data is built and where it lives (Amazon S3, not in this repo) |
+| `demo/` | Notes on the demo data (lives on Amazon S3, not in this repo); rebuild steps in `docs/engine_api.md` |
 | `space/` | Docker files for a future live engine (not deployed) |
-| `docs/` | Engine API contract |
+| `docs/` | `engine_api.md` (API contract the app reads, demo rebuild steps), `engine_results.md` (the 59-scan finding exam in detail) |
 
 ## How to run
 
 ### 1. Use the app (no install)
-Open https://lung-marker-scan.base44.app and sign in with Google (one click). Settings → *Engine base URL* points at the demo data
-(`https://lungmarker-demo-data-sd.s3.eu-north-1.amazonaws.com/api/v1`).
+Open https://lung-marker-scan.base44.app and sign in with Google (one click). Nothing to set up: the app is already connected to the demo data.
 The Worklist fills itself with the demo scans. Open one, review, approve, then *Dashboard → Reports → Export to Excel*.
 During the review period, anyone who signs in is a reviewer and can try the full review (demo data only). The owner can switch a user to read-only in *Settings → User roles*.
 App code, tests and local setup: see the [app README](https://github.com/stavdelmar/lungmarker#readme).
